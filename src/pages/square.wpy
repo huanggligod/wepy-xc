@@ -1,0 +1,48 @@
+<style lang="less">
+  .main {
+    font-size: 24px;
+  }
+</style>
+<template>
+  <view class="container">
+    <view class="main">hellow word2</view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+
+export default class Index extends wepy.page {
+  config = {
+    navigationBarTitleText: '小槽姐'
+  }
+
+  data = {
+
+  }
+
+  async onLoad () {
+    // await wepy.login()
+    // this.userInfo = await wepy.getUserInfo()
+  }
+
+  methods = {
+    onShareAppMessage: function(res) {
+      if (res.from === 'button') {
+        // 来自页面内转发按钮
+        console.log(res.target)
+      }
+      return {
+        title: '小曹姐',
+        path: '/pages/index',
+        success: function(res) {
+          // 转发成功
+        },
+        fail: function(res) {
+          // 转发失败
+        }
+      }
+    }
+  }
+}
+</script>

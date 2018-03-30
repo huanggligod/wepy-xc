@@ -1,0 +1,227 @@
+<style lang="less">
+  .container {
+    padding: 0 30rpx;
+  }
+  .head {
+    .avatarurl {
+      display: block;
+      width: 120rpx;
+      height: 120rpx;
+      border: 10rpx solid #fff;
+      border-radius: 50%;
+      background-color: #eee;
+      position: absolute;
+      top: 40rpx;
+      left: 50%;
+      margin-left: -60rpx;
+    }
+  }
+  .trable-iput {
+    margin-top: 110rpx;
+    width: 100%;
+    background: #fff;
+    padding: 30rpx 22rpx 0;
+    box-sizing: border-box;
+    border-radius: 6px;
+    .iput-tit {
+      font-size: 30rpx;
+      color: #000000;
+      font-weight: 600;
+    }
+    .section {
+      font-size: 30rpx;
+      margin-top: 30rpx;
+      line-height: 1.5;
+      width: 100%;
+      .txt {
+        width: 100%;
+        line-height: 1.5;
+        color: #d2d2d2;  
+      }
+    }
+  }
+
+  .packet-boxs {
+    display: flex;
+    width: 100%;
+    margin-top: 30rpx;
+    justify-content: space-between;
+
+    .money-box {
+      background: #fff;
+      width: 320rpx;
+      padding: 20rpx;
+      box-sizing: border-box;
+      border-radius: 6px;
+      position: relative;
+    
+      text {
+        font-size: 30rpx;
+        color: #000000
+      }
+
+      image {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 98rpx;
+        height: 96rpx;
+      }
+      .img2 {
+        width: 90rpx;
+        height: 97rpx;
+      }
+    }
+
+    .input-box {
+      font-size: 24rpx;
+      padding-left: 4rpx;
+      margin-top: 26rpx;
+      border-bottom: 1rpx solid #888888;
+      color: #888888;
+    }
+  }
+  .money-radios {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 26rpx;
+    label {
+      width: 54rpx;
+      height: 40rpx;
+      line-height: 40rpx;
+      text-align: center;
+      color: #d95940;
+      border: 1px solid #d95940;
+      border-radius: 4rpx;
+      font-size: 30rpx;
+      border-radius: 4rpx;
+
+      &.active {
+        background: #d95940;
+        color: #fff;
+      }
+    }
+  }
+</style>
+<template>
+  <view class="container">
+    <view class="head">
+      <image class="avatarurl" src="{{userInfo.avatarUrl}}"></image>
+    </view>
+    <view class="trable-iput">
+      <text class="iput-tit">我的烦恼</text>
+      <view class="section">
+        <textarea class="txt" placeholder="请输入你想得到帮助的问题（如：请问某某市某某区哪里有好吃的串串火锅？" maxlength="-1" placeholder-style="color:#d2d2d2;" auto-focus></textarea>
+      </view>
+    </view>
+    <view class="packet-boxs">
+      <view class="money-box">
+        <text>答谢金(元):</text>
+        <radio-group class="money-radios" hidden="{{Hidden==0?true:false}}" bindchange="radioChange">
+          <label class="{{radioCheckVal==1?'active':''}}">1
+            <radio value="1" hidden="true"></radio>
+          </label>
+          <label class="{{radioCheckVal==3?'active':''}}">3
+            <radio value="3" hidden="true"></radio>
+          </label>
+          <label class="{{radioCheckVal==5?'active':''}}">5
+            <radio value="5" hidden="true"></radio>
+          </label>
+          <label style="font-size:36rpx;">···
+            <radio value="0" hidden="true"></radio>
+          </label>
+        </radio-group>
+        <view class="input-box" hidden="{{Hidden==0?false:true}}">
+          <input type="digit" placeholder="请输入金额" placeholder-style="font-size:26rpx;"/>
+        </view>
+        <image src="../images/icon-money.png"></image>
+      </view>
+      <view class="money-box">
+        <text>总数量(个):</text>
+        <radio-group class="money-radios" hidden="{{Hidden2==0?true:false}}" bindchange="radioChange2">
+          <label class="{{radioCheckVal2==1?'active':''}}">1
+            <radio value="1" hidden="true"></radio>
+          </label>
+          <label class="{{radioCheckVal2==3?'active':''}}">3
+            <radio value="3" hidden="true"></radio>
+          </label>
+          <label class="{{radioCheckVal2==5?'active':''}}">5
+            <radio value="5" hidden="true"></radio>
+          </label>
+          <label style="font-size:36rpx;">···
+            <radio value="0" hidden="true"></radio>
+          </label>
+        </radio-group>
+        <view class="input-box" hidden="{{Hidden2==0?false:true}}">
+          <input type="digit" placeholder="请输入金额" placeholder-style="font-size:26rpx;"/>
+        </view>
+        <image class="img2" src="../images/icon-num.png"></image>
+      </view>
+    </view>
+    <view class="section-show">
+
+    </view>
+  </view>
+    
+</template>
+
+<script>
+import wepy from 'wepy'
+import { checkSettingStatu } from '../util/util'
+
+export default class Index extends wepy.page {
+  config = {
+    navigationBarTitleText: '我的烦恼'
+  }
+
+  data = {
+    userInfo: {},
+    radioCheckVal: 1,
+    radioCheckVal2: 1,
+    Hidden: 1,
+    Hidden2: 1
+  }
+
+  async onLoad () {
+    let that = this
+    await wepy.login()
+    let c = await wepy.getUserInfo()
+    that.userInfo = c.userInfo
+    that.$apply()
+  }
+
+  onShow () {
+    checkSettingStatu()
+  }
+  methods = {
+    onShareAppMessage: function(res) {
+      if (res.from === 'button') {
+        // 来自页面内转发按钮
+        console.log(res.target)
+      }
+      return {
+        title: '小曹姐',
+        path: '/pages/index',
+        success: function(res) {
+          // 转发成功
+        },
+        fail: function(res) {
+          // 转发失败
+        }
+      }
+    },
+    radioChange: function(e) {
+      let that = this
+      that.radioCheckVal = e.detail.value
+      that.Hidden = e.detail.value
+      that.$apply()
+    },
+    radioChange2: function(e) {
+      let that = this
+      that.radioCheckVal2 = e.detail.value
+      that.Hidden2 = e.detail.value
+      that.$apply()
+    }
+  }
+}
+</script>

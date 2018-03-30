@@ -1,0 +1,77 @@
+<style lang='less'>
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  background-color:#f6f6f6; 
+}
+</style>
+
+<script>
+import wepy from 'wepy'
+import 'wepy-async-function'
+
+export default class extends wepy.app {
+  config = {
+    pages: [
+      'pages/index',
+      'pages/square'
+    ],
+    window: {
+      backgroundTextStyle: 'light',
+      navigationBarBackgroundColor: '#d95940',
+      navigationBarTitleText: '小槽姐',
+      navigationBarTextStyle: '#fff'
+    },
+    'tabBar': {
+      'color': '#9a9a9a',
+      'backgroundColor': '#ffffff',
+      'selectedColor': '#de7765',
+      'borderStyle': 'black',
+      'list': [{
+        'pagePath': 'pages/index',
+        'text': '我的烦恼',
+        'iconPath': 'images/icon-new.png',
+        'selectedIconPath': 'images/icon-new-active.png'
+      },
+      {
+        'pagePath': 'pages/square',
+        'text': '解忧广场',
+        'iconPath': 'images/icon-square.png',
+        'selectedIconPath': 'images/icon-square-active.png'
+      }]
+    }
+  }
+
+  globalData = {
+    userInfo: null
+  }
+
+  constructor () {
+    super()
+    this.use('requestfix')
+    this.use('promisify')
+  }
+  async onLaunch () {
+    let that = this
+    await wepy.login()
+    wx.getSetting({
+      success (res) {
+        if (res.authSetting['scope.userInfo']) {
+          wepy.getUserInfo({
+            success (res) {
+              that.globalData.userInfo = res.userInfo
+              if (that.userInfoReadyCallback) {
+                that.userInfoReadyCallback(res)
+              }
+            }
+          })
+        }
+      }
+    })
+  }
+}
+</script>

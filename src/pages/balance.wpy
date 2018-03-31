@@ -1,0 +1,25 @@
+<!-- 余额 -->
+<template>
+    <view class="container">
+
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+
+export default class Balance extends wepy.page {
+  config = {
+    navigationBarTitleText: '解忧广场',
+    enablePullDownRefresh: true
+  }
+  data = {
+   
+  }
+  methods = {}
+}
+
+</script>
+<style lang='less' scoped>
+
+</style>

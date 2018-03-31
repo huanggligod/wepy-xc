@@ -8,7 +8,7 @@ export default class Tips {
   /**
    * 弹出提示框
    */
-  success(title, duration = 500) {
+  static success(title, duration = 500) {
     setTimeout(() => {
       wx.showToast({
         title: title,
@@ -28,7 +28,7 @@ export default class Tips {
   /**
    * 弹出确认窗口
    */
-  confirm(text, payload = {}, title = '提示') {
+  static confirm(text, payload = {}, title = '提示') {
     return new Promise((resolve, reject) => {
       wx.showModal({
         title: title,
@@ -47,7 +47,7 @@ export default class Tips {
       })
     })
   }
-  toast(title, onHide, icon = 'success') {
+  static toast(title, onHide, icon = 'success') {
     setTimeout(() => {
       wx.showToast({
         title: title,
@@ -66,7 +66,7 @@ export default class Tips {
   /**
    * 警告框
    */
-  alert(title) {
+  static alert(title) {
     wx.showToast({
       title: title,
       image: '../images/alert.png',
@@ -77,7 +77,7 @@ export default class Tips {
   /**
    * 错误框
   */
-  error(title, onHide) {
+  static error(title, onHide) {
     wx.showToast({
       title: title,
       image: '../images/error.png',
@@ -94,7 +94,7 @@ export default class Tips {
   /**
    * 弹出加载提示
    */
-  loading(title = '加载中') {
+  static loading(title = '加载中') {
     if (Tips.isLoading) {
       return
     }
@@ -107,7 +107,7 @@ export default class Tips {
   /**
    * 加载完毕
    */
-  loaded() {
+  static loaded() {
     if (Tips.isLoading) {
       Tips.isLoading = false
       wx.hideLoading()

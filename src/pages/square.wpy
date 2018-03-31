@@ -1,24 +1,188 @@
 <style lang="less">
-  .main {
-    font-size: 24px;
+  .square-head {
+    width: 100%;
+    background: #d95940;
+    display: flex;
+    padding: 20rpx 0;
+    .head-logo {
+      padding: 0 32rpx;
+      text-align: center;
+
+      .logo-pic {
+        width: 93rpx;
+        height: 108rpx;
+      }
+      text{
+        display: block;
+        color: #fff;
+        font-size: 30rpx;
+      }
+    }
+    .mes-bar {
+      display: flex;
+      align-items: center;
+       justify-content: space-around;
+      width: 512rpx;
+      background: #fff;
+      padding: 30rpx 0;
+      box-sizing: border-box;
+      border-radius: 10rpx;
+      .mes-item {  
+        text {
+          display: block;
+          text-align: center;
+          line-height: 1.5;
+          &.num {
+            font-size: 36rpx;
+            color: #000;
+          }
+
+          &.tit {
+            font-size: 26rpx;
+            color: #a9a9a9;
+          }
+        }
+      }
+    }
+  }
+  .proble-items {
+    width: 100%;
+    padding: 40rpx 15rpx;
+    box-sizing: border-box;
+    min-height: 950rpx;
+    &:after {
+      content: '';
+      display: block;
+      clear: both;
+    }
+    .proble-item {
+      width: 330rpx;
+      float: left;
+      margin: 0 15rpx 30rpx;
+    }
+    .item-top {
+      background: #ffff;
+      display: flex;
+      align-items: center;
+      border-top-left-radius: 10rpx;
+      border-top-right-radius: 10rpx;
+      padding: 10rpx 20rpx;
+      box-sizing: border-box;
+      image {
+        width: 80rpx;
+        height: 80rpx;
+        border-radius: 8rpx;
+      }
+      text {
+        display: block;
+        font-size: 24rpx;
+        color: #545454;
+        margin-left: 16rpx;
+        line-height: 1.5;
+      }
+    }
+
+    .item-info {
+      width: 100%;
+      padding: 28rpx 22rpx;
+      background: #d95940;
+      box-sizing: border-box;
+      border-bottom-left-radius: 10rpx;
+      border-bottom-right-radius: 10rpx; 
+      &.hui {
+        background: #f58670;
+      }
+      .title {
+        color: #fff;
+        font-size: 30rpx;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        word-wrap: break-word;
+        overflow: hidden;
+        -webkit-box-pack: center;
+      }
+      .info-mes {
+        margin-top: 50rpx;
+        font-size: 24rpx;
+        color: #fff;
+      }
+    }
   }
 </style>
 <template>
   <view class="container">
-    <view class="main">hellow word2</view>
+    <view class="square-head">
+      <view class="head-logo">
+        <image class="logo-pic" src="../images/square-logo.png"></image>
+        <text>大家帮一帮</text>
+      </view>
+      <view class="mes-bar">
+        <view class="mes-item">
+          <text class="num">10.33w</text>
+          <text class="tit">问题数量</text>
+        </view>
+        <view class="mes-item">
+          <text class="num">1024</text>
+          <text class="tit">抢到人次</text>
+        </view>
+        <view class="mes-item">
+          <text class="num">4.4w</text>
+          <text class="tit">今日访问量</text>
+        </view>
+      </view> 
+    </view>
+    <view class="proble-items">
+      <block wx:if="{{probleItems.length > 0 }}">
+        <view class="proble-item" wx:for="{{probleItems}}">
+          <navigator url="">
+            <view class="item-top">
+              <image src="{{item.image}}"></image>
+              <view>
+                <text class="name">来自 {{item.name}}</text> 
+                <text class="time">{{item.time}}</text>
+              </view>
+            </view>
+            <block wx:if="{{ item.remain > 0 }}">
+              <view class="item-info">
+                <text class="title">{{item.title}}</text>
+                <view class="info-mes">{{item.money}}元{{item.num}}份， 剩余{{item.remain}}份</view>
+              </view>
+            </block>
+            <block wx:else>
+              <view class="item-info hui">
+                <text class="title">{{item.title}}</text>
+                <view class="info-mes">{{item.money}}元{{item.num}}份， 剩余{{item.remain}}份</view>
+              </view>
+            </block>
+          </navigator> 
+        </view>
+      </block>
+    </view>
   </view>
 </template>
 
 <script>
 import wepy from 'wepy'
+import { checkSettingStatu } from '../util/util'
+import shareMessage from '../mixins/shareMessage'
 
 export default class Index extends wepy.page {
   config = {
-    navigationBarTitleText: '小槽姐'
+    navigationBarTitleText: '解忧广场',
+    enablePullDownRefresh: true,
+    backgroundColor: '#d95940'
   }
-
+  mixins = [shareMessage]
   data = {
-
+    probleItems: [
+      {'name': '喵小姐', 'image': '../images/avator.png', 'time': '3月28日　12:45', 'title': '南昌市青山湖区哪里有串串火锅,不是那个那个那个', 'money':'5', 'num': '10', 'remain': '10'},
+      {'name': '喵小姐', 'image': '../images/avator.png', 'time': '3月28日　12:45', 'title': '南昌市青山湖区哪里有串串火锅,不是那个那个那个', 'money':'5', 'num': '10', 'remain': '10'},
+      {'name': '喵小姐', 'image': '../images/avator.png', 'time': '3月28日　12:45', 'title': '南昌市青山湖区哪里有串串火锅,不是那个那个那个', 'money':'5', 'num': '10', 'remain': '0'}
+    ]
+  }
+  onShow () {
+    checkSettingStatu()
   }
 
   async onLoad () {
@@ -26,23 +190,7 @@ export default class Index extends wepy.page {
     // this.userInfo = await wepy.getUserInfo()
   }
 
-  methods = {
-    onShareAppMessage: function(res) {
-      if (res.from === 'button') {
-        // 来自页面内转发按钮
-        console.log(res.target)
-      }
-      return {
-        title: '小曹姐',
-        path: '/pages/index',
-        success: function(res) {
-          // 转发成功
-        },
-        fail: function(res) {
-          // 转发失败
-        }
-      }
-    }
+  methods = {  
   }
 }
 </script>

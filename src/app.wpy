@@ -18,31 +18,41 @@ export default class extends wepy.app {
   config = {
     pages: [
       'pages/index',
-      'pages/square'
+      'pages/square',
+      'pages/balance'
     ],
     window: {
       backgroundTextStyle: 'light',
       navigationBarBackgroundColor: '#d95940',
       navigationBarTitleText: '小槽姐',
-      navigationBarTextStyle: '#fff'
+      navigationBarTextStyle: '#fff',
+      backgroundColor: '#eaeaea'
     },
     'tabBar': {
       'color': '#9a9a9a',
       'backgroundColor': '#ffffff',
       'selectedColor': '#de7765',
       'borderStyle': 'black',
-      'list': [{
-        'pagePath': 'pages/index',
-        'text': '我的烦恼',
-        'iconPath': 'images/icon-new.png',
-        'selectedIconPath': 'images/icon-new-active.png'
-      },
-      {
-        'pagePath': 'pages/square',
-        'text': '解忧广场',
-        'iconPath': 'images/icon-square.png',
-        'selectedIconPath': 'images/icon-square-active.png'
-      }]
+      'list': [
+        {
+          'pagePath': 'pages/index',
+          'text': '我的烦恼',
+          'iconPath': 'images/icon-new.png',
+          'selectedIconPath': 'images/icon-new-active.png'
+        },
+        {
+          'pagePath': 'pages/square',
+          'text': '解忧广场',
+          'iconPath': 'images/icon-square.png',
+          'selectedIconPath': 'images/icon-square-active.png'
+        },
+        {
+          'pagePath': 'pages/balance',
+          'text': '余额提现',
+          'iconPath': 'images/icon-balance.png',
+          'selectedIconPath': 'images/icon-balance-active.png'
+        }
+      ]
     }
   }
 

@@ -119,16 +119,16 @@
       </view>
       <view class="mes-bar">
         <view class="mes-item">
-          <text class="num">10.33w</text>
-          <text class="tit">问题数量</text>
+          <text class="num">{{totalNum}}</text>
+          <text class="tit">提问数量</text>
         </view>
         <view class="mes-item">
-          <text class="num">1024</text>
-          <text class="tit">抢到人次</text>
+          <text class="num">{{grabNum}}</text>
+          <text class="tit">帮忙人次</text>
         </view>
         <view class="mes-item">
-          <text class="num">4.4w</text>
-          <text class="tit">今日访问量</text>
+          <text class="num">{{pvNum}}</text>
+          <text class="tit">累计答谢金</text>
         </view>
       </view> 
     </view>
@@ -137,24 +137,16 @@
         <view class="proble-item" wx:for="{{probleItems}}">
           <navigator url="">
             <view class="item-top">
-              <image src="{{item.image}}"></image>
+              <image src="{{item.headimg}}"></image>
               <view>
-                <text class="name">来自 {{item.name}}</text> 
+                <text class="name">来自 {{item.nickName}}</text> 
                 <text class="time">{{item.time}}</text>
               </view>
             </view>
-            <block wx:if="{{ item.remain > 0 }}">
-              <view class="item-info">
-                <text class="title">{{item.title}}</text>
-                <view class="info-mes">{{item.money}}元{{item.num}}份， 剩余{{item.remain}}份</view>
-              </view>
-            </block>
-            <block wx:else>
-              <view class="item-info hui">
-                <text class="title">{{item.title}}</text>
-                <view class="info-mes">{{item.money}}元{{item.num}}份， 剩余{{item.remain}}份</view>
-              </view>
-            </block>
+            <view class="item-info + {{ item.status==2?'':'hui'}}">
+              <text class="title">{{item.words}}</text>
+              <view class="info-mes">{{item.amount}}元{{item.redpack_num}}份， 剩余{{item.redpack_num - item.grab_num}}份</view>
+            </view>
           </navigator> 
         </view>
       </block>
@@ -166,8 +158,8 @@
 import wepy from 'wepy'
 import { checkSettingStatu } from '../util/util'
 import shareMessage from '../mixins/shareMessage'
-
-export default class Index extends wepy.page {
+import tip from '../util/tip'
+export default class Square extends wepy.page {
   config = {
     navigationBarTitleText: '解忧广场',
     enablePullDownRefresh: true,
@@ -175,21 +167,61 @@ export default class Index extends wepy.page {
   }
   mixins = [shareMessage]
   data = {
-    probleItems: [
-      {'name': '喵小姐', 'image': '../images/avator.png', 'time': '3月28日　12:45', 'title': '南昌市青山湖区哪里有串串火锅,不是那个那个那个', 'money':'5', 'num': '10', 'remain': '10'},
-      {'name': '喵小姐', 'image': '../images/avator.png', 'time': '3月28日　12:45', 'title': '南昌市青山湖区哪里有串串火锅,不是那个那个那个', 'money':'5', 'num': '10', 'remain': '10'},
-      {'name': '喵小姐', 'image': '../images/avator.png', 'time': '3月28日　12:45', 'title': '南昌市青山湖区哪里有串串火锅,不是那个那个那个', 'money':'5', 'num': '10', 'remain': '0'}
-    ]
+    totalNum: '',
+    grabNum: '',
+    pvNum: '',
+    page: '',
+    token: '',
+    probleItems: []
   }
   onShow () {
     checkSettingStatu()
   }
 
   async onLoad () {
-    // await wepy.login()
-    // this.userInfo = await wepy.getUserInfo()
+    let that = this
+    that.token = await wepy.getStorageSync('token')
+    let page = 1
+    this.getBaseData()
+    this.getSquareData()
+  }
+  async getBaseData () {
+    let that = this 
+    await wepy.request({
+      url: 'https://m.tdamm.com/weapp/api/trouble/get_square_base_data?token=' + this.token,
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }).then(res => {
+      that.totalNum = res.data.total_num
+      that.grabNum = res.data.grab_num
+      that.pvNum = res.data.grab_num
+      that.$apply()
+    }).catch(res => {
+      console.log(res)
+    })
   }
 
+  async getSquareData () {
+    let that = this
+    tip.loading()
+    await wepy.request({
+      url: 'https://m.tdamm.com/weapp/api/trouble/get_square_data?token=' + this.token,
+      method: 'POST',
+      data: {
+        page: that.page
+      },
+      header: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }).then(res => {
+      console.log(res)
+      that.probleItems = res.data.records
+      that.$apply()
+    })
+    tip.loaded()
+  }
   methods = {  
   }
 }

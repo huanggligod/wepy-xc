@@ -1,25 +1,156 @@
 <!-- 余额 -->
 <template>
-    <view class="container">
-
+  <view class="balance-wrap">
+    <view class="account">
+      <view class="account-top">
+        <text>账户余额</text>
+        <text style="font-size:48rpx; margin-left:48rpx;">{{Balance}}</text>
+        元
+      </view>
+      <view class="account-txt">提现到微信零钱</view>
     </view>
+		<view class="withdrawal-box">
+			<text class="tit">提现金额</text>
+			<view class="balance-section">
+				<text>￥</text>
+				<input type="digit" bindinput="setValue" />
+			</view>
+			<text class="t">全部提现</text>
+			<button class"cash-btn" @tap="cashOut">提现</button>
+			<text class="cash-tip">1-3个工作日到账</text>
+		</view>
+		<view class="links"><button plain="true" class="customer" open-type="contact">联系客服</button><text @tap="goTo('/pages/complaints')">投诉</text></view>
+		<view class="faq" @tap="goTo('/pages/sqa')">常见问题</view>
+	</view>
 </template>
 
 <script>
 import wepy from 'wepy'
+import { checkSettingStatu } from '../util/util'
+import tip from '../util/tip'
 
 export default class Balance extends wepy.page {
   config = {
-    navigationBarTitleText: '解忧广场',
-    enablePullDownRefresh: true
+    navigationBarTitleText: '余额提现'
   }
   data = {
-   
+    Balance: '0.00'
   }
-  methods = {}
+  onShow() {
+    checkSettingStatu()
+  }
+  methods = {
+    setValue: function(e) {
+      let that = this
+      let val = parseFloat(e.detail.value)
+      let balance = parseFloat(that.Balance)
+      if (val > balance) {
+        return that.Balance
+      }
+    },
+    goTo(url) {
+      if (url.length === 0) {
+        return
+      }
+      wepy.navigateTo({
+        url: url
+      })
+    },
+    cashOut() {
+      let that = this
+      let balance = parseFloat(that.Balance)
+      if (balance < 1) {
+        tip.confirmT('最少提现1元')
+      }
+    }
+  }
 }
-
 </script>
-<style lang='less' scoped>
+<style lang='less'>
+  .balance-wrap {
+    padding: 30rpx;
+    box-sizing: border-box;
+    background: #f6f6f6;
+  }
+  .account {
+    background: #fafafa;
+    padding: 40rpx 42rpx;
+    .account-top {
+      font-size: 30rpx;
+      color: #999999;
+    }
+    .account-txt {
+      font-size: 30rpx;
+      color: #888888;
+      margin-top: 25rpx;
+    }
+  }
+  .withdrawal-box {
+    background: #ffffff;
+    padding: 30rpx 40rpx;
+    .tit {
+      font-size: 36rpx;
+      color: #5e5e5e;
+    }
+    .balance-section {
+      padding: 45rpx 0 20rpx 0;
+      display: flex;
+      border-bottom: 1rpx solid #888888;
+      text {
+        font-size: 46rpx;
+      }
+      input {
+        font-size: 70rpx;
+        height: 70rpx;
+        vertical-align: top;
+      }
+    }
+    .t {
+      font-size: 28rpx;
+      color: #6c7684;
+    }
+    .cash-btn {
+      background: #1aad19;
+      color: #fff;
+      margin-top: 46rpx;
+    }
+    .cash-tip {
+      display: block;
+      color: #999999;
+      font-size: 30rpx;
+      text-align: center;
+      margin-top: 44rpx;
+    }
+  }
+  .links {
+    font-size: 28rpx;
+    color: #5d6979;
+    text-align: center;
+    margin-top: 40rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .customer {
+      width: 150rpx;
+      border: none;
+      padding-left: 0;
+      padding-right: 0;
+      color: #5d6979;
+      font-size: 28rpx;
+      margin-left: 0;
+      margin-right: 0;
+      line-height: 1;
+    }
+    text {
+      margin: 0 15rpx;
+    }
+  }
+  .faq {
+    font-size: 28rpx;
+    color: #5d6979;
+    text-align: center;
+    margin-top: 206rpx;
+  }
 
 </style>

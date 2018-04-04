@@ -1,0 +1,144 @@
+<style lang="less">
+  page {
+    height: 100%;
+    background: #f6f6f6;
+  }
+  .my-history {
+    height: 100%;
+    
+    .tab-menu {
+      display: flex;
+      height: 100rpx;
+      align-items: center;
+      justify-content: space-around;
+      background-color: #fff;
+      
+      .tab-list {
+        font-size: 30rpx;
+        color: #9a9a9a;
+        
+        height: 100rpx;
+        line-height: 100rpx;
+        box-sizing: border-box;
+
+        &.active {
+          color: #d95940;
+          border-bottom: 4rpx solid #d95940;
+        }
+      }
+
+    }
+    swiper {
+      box-sizing: border-box;
+      min-height: 90%;
+    }
+    .swiper-item {
+      width: 100%;  
+    }
+    .lists {
+      margin-top: 30rpx;
+    }
+  }
+</style>
+<template>
+  <view class="my-history">
+    <view class="tab-menu">
+      <view class="tab-list + {{current==0?'active':''}}" data-id="0" @tap="getId">我的问题</view>
+      <view class="tab-list + {{current==1?'active':''}}" data-id="1" @tap="getId">我的回复</view>
+    </view>
+    <swiper duration="{{duration}}" current="{{current}}" bindchange="changeCurrent">
+      <swiper-item class="swiper-item">
+          <receivePanel :userInfo.sync="userInfo" :num.sync="receiveNum" :money.sync="receiveMoney"></receivePanel>
+          <view class="lists">
+            <receiveList :receiveList.sync="receiveList"></receiveList>
+          </view>        
+      </swiper-item>
+      <swiper-item>
+        <replyPanel :userInfo.sync="userInfo" :num.sync="replyNum" :money.sync="replyMoney"></replyPanel>
+        <view class="lists">
+          <replyList :replyList.sync="replyList"></replyList>
+        </view>  
+      </swiper-item>
+    </swiper>
+    
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import { checkSettingStatu } from '../util/util'
+import ReceiveList from '../components/receive'
+import ReplyList from '../components/reply-list'
+import SwiperPanel from '../components/swiper-panel'
+
+export default class MyHistory extends wepy.page {
+  config = {
+    navigationBarTitleText: '我的记录',
+    enablePullDownRefresh: true,
+    backgroundColor: '#d95940'
+  }
+  components = {
+    receiveList: ReceiveList,
+    receivePanel: SwiperPanel,
+    replyPanel: SwiperPanel,
+    replyList: ReplyList
+  }
+  data = {
+    userInfo: '',
+    duration: 500,
+    current: '0',
+    receiveNum: 5,
+    receiveMoney: 10,
+    replyNum: 2,
+    replyMoney: 5,
+    receiveList: [
+      {
+        title: '南昌青山湖区哪里有特别好吃的串串火锅？不是那种冷锅串串，是四川的串串火锅,请问有谁知道吗',
+        money: '1',
+        creat_time: '03月28日 15:35',
+        redpack_num: '1',
+        grab_num: '1'
+      },
+      {
+        title: '南昌青山湖区哪里有特别好吃的串串火锅？不是那种冷锅串串，是四川的串串火锅,请问有谁知道吗',
+        money: '1',
+        creat_time: '03月29日 15:35',
+        redpack_num: '2',
+        grab_num: '1'
+      }
+    ],
+    replyList: [
+      {
+        title: '南昌青山湖区哪里有特别好吃的串串火锅？不是那种冷锅串串，是四川的串串火锅,请问有谁知道吗',
+        amount: '1',
+        image: '../images/avator.png'
+      },
+      {
+        title: '南昌青山湖区哪里有特别好吃的串串火锅？不是那种冷锅串串，是四川的串串火锅,请问有谁知道吗',
+        amount: '1',
+        image: '../images/avator.png'
+      }
+    ]
+  }
+  onLoad () {
+    let that = this
+    let userInfo = wepy.getStorageSync('userInfo')
+    that.userInfo = userInfo
+  }
+  async onShow () {
+    await this.$parent.checkLoginState()
+  }
+  methods = {
+    changeCurrent: function(e) {
+      let that = this
+      let cur = e.detail.current
+      that.current = cur
+    },
+    getId: function(e) {
+      let that = this
+      let id = e.currentTarget.dataset.id
+      that.current = id
+    }
+  }
+}
+</script>

@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
-  background-color:#f6f6f6; 
+  background-color: #f6f6f6;
 }
 </style>
 
@@ -19,7 +19,12 @@ export default class extends wepy.app {
     pages: [
       'pages/index',
       'pages/square',
-      'pages/balance'
+      'pages/balance',
+      'pages/sqa',
+      'pages/my-history',
+      'pages/pack-detail',
+      'pages/share',
+      'pages/complaints'
     ],
     window: {
       backgroundTextStyle: 'light',
@@ -28,29 +33,35 @@ export default class extends wepy.app {
       navigationBarTextStyle: '#fff',
       backgroundColor: '#eaeaea'
     },
-    'tabBar': {
-      'color': '#9a9a9a',
-      'backgroundColor': '#ffffff',
-      'selectedColor': '#de7765',
-      'borderStyle': 'black',
-      'list': [
+    tabBar: {
+      color: '#9a9a9a',
+      backgroundColor: '#ffffff',
+      selectedColor: '#de7765',
+      borderStyle: 'black',
+      list: [
         {
-          'pagePath': 'pages/index',
-          'text': '我的烦恼',
-          'iconPath': 'images/icon-new.png',
-          'selectedIconPath': 'images/icon-new-active.png'
+          pagePath: 'pages/index',
+          text: '请你帮忙',
+          iconPath: 'images/icon-new.png',
+          selectedIconPath: 'images/icon-new-active.png'
         },
         {
-          'pagePath': 'pages/square',
-          'text': '解忧广场',
-          'iconPath': 'images/icon-square.png',
-          'selectedIconPath': 'images/icon-square-active.png'
+          pagePath: 'pages/my-history',
+          text: '我的记录',
+          iconPath: 'images/icon-history.png',
+          selectedIconPath: 'images/icon-history-active.png'
         },
         {
-          'pagePath': 'pages/balance',
-          'text': '余额提现',
-          'iconPath': 'images/icon-balance.png',
-          'selectedIconPath': 'images/icon-balance-active.png'
+          pagePath: 'pages/square',
+          text: '解忧广场',
+          iconPath: 'images/icon-square.png',
+          selectedIconPath: 'images/icon-square-active.png'
+        },
+        {
+          pagePath: 'pages/balance',
+          text: '余额提现',
+          iconPath: 'images/icon-balance.png',
+          selectedIconPath: 'images/icon-balance-active.png'
         }
       ]
     }
@@ -60,28 +71,80 @@ export default class extends wepy.app {
     userInfo: null
   }
 
-  constructor () {
+  constructor() {
     super()
     this.use('requestfix')
     this.use('promisify')
+
+    // 全局拦截与后端请求的数据，这也是为什么会在app.wpy我要写一个commentRequest方法的原因
+    // this.intercept('request', {
+    //   config(p) {
+    //     return p
+    //   },
+    //   success(response) {
+    //     if (response.statusCode === 200) {
+    //       if (response.data.code === 200){
+    //          return response.data
+    //       } else {
+    //         alert(response.data.msg)
+    //       }
+    //     } else {
+    //       wepy.showModal({
+    //         title: '出错了。。',
+    //         content: '请下拉重新加载页面'
+    //       })
+    //       wepy.clearStorageSync()
+    //     }
+    //   },
+    //   fail(response) {
+    //     return response
+    //   }
+    // })
   }
-  async onLaunch () {
-    let that = this
-    await wepy.login()
-    wx.getSetting({
-      success (res) {
-        if (res.authSetting['scope.userInfo']) {
-          wepy.getUserInfo({
-            success (res) {
-              that.globalData.userInfo = res.userInfo
-              if (that.userInfoReadyCallback) {
-                that.userInfoReadyCallback(res)
-              }
-            }
-          })
-        }
+  async login () { 
+    let wxLoginState = await wepy.checkSession().then(res => { return true }, res => { return false })
+    let token = wx.getStorageSync('token')
+    if (!wxLoginState || !token) {
+      let that = this
+      let resp = await wepy.login()
+      if (resp.code) {
+        let c = await wepy.getUserInfo()
+        that.globalData.userInfo = c.userInfo
+        wepy.setStorageSync('userInfo', c.userInfo)
+        wepy.request({
+          url: 'https://m.tdamm.com/weapp/member/login',
+          method: 'POST',
+          data: {
+            code: resp.code,
+            encryptedData: c.encryptedData,
+            iv: c.iv
+          },
+          header: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        })
+        .then(res => {
+          if (res.data.token) {
+            wepy.setStorageSync('token', res.data.token)
+          }
+        }).catch(data => {
+          console.log(data)
+        })
       }
-    })
+    } else {
+      return false
+    }
+    
+  }
+  async checkLoginState() {
+    // 微信自己的code 状态
+    let wxLoginState = await wepy.checkSession().then(res => { return true }, res => { return false })
+    let token = wx.getStorageSync('token')
+    if (!wxLoginState || !token) {
+      return await this.login()
+    } else {
+      return false
+    }
   }
 }
 </script>

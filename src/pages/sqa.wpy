@@ -1,0 +1,175 @@
+<style lang="less">
+page {
+  height: 100%;
+}
+.sqa-wrap {
+  height: 100%;
+  padding: 34rpx 30rpx;
+  box-sizing: border-box;
+  background: #f6f6f6;
+}
+.question-lists {
+  width: 100%;
+  box-sizing: border-box;
+  .question-list {
+    background: #fff;
+    padding: 0 20rpx;
+    margin-bottom: 30rpx;
+    border-radius: 6rpx;
+    .list-top {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 26rpx 0;
+      text {
+        font-size: 26rpx;
+        color: #000;
+        display: block;
+        width: 578rpx;
+        font-weight: 600;
+      }
+      image {
+        width: 30rpx;
+        height: 18rpx;
+      }
+    }
+    .list-txt {
+      border-top: 1px solid #ededed;
+      color: #888888;
+      font-size: 30rpx;
+      padding: 30rpx 0;
+      line-height: 1.5;
+    }
+  }
+}
+.customer {
+  background: #4ec046;
+  color: #fff;
+  margin-top: 40rpx;
+}
+
+.advice {
+  display: block;
+  background-color: #fff;
+  padding: 0 20rpx;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+  .title {
+    font-size: 28rpx;
+    color: #000;
+    padding: 26rpx 0;
+    border-bottom: 1rpx solid #ededed;
+  }
+  textarea {
+    display: block;
+    margin: 24rpx 0;
+    font-size: 28rpx;
+    width: 100%;
+  }
+  .btn {
+    position: absolute;
+    width: 150rpx;
+    padding: 10rpx 0;
+    background: #888888;
+    color: #fff;
+    text-align: center;
+    right: 22rpx;
+    top: 16rpx;
+    font-size: 26rpx;
+    border-radius: 10rpx;
+    
+  }
+}
+</style>
+<template>
+    <view class="sqa-wrap">
+        <vie class="question-lists">
+            <view class="question-list"  wx:for="{{lists}}">
+                <view class="list-top" data-index="{{index}}" @tap="setDateId">
+                    <text>{{item.title}}</text>
+                    <image class="icon" src="../images/question-icon.png"></image>
+                </view>
+                <view class="list-txt" wx:if="{{item.toggle}}">{{item.txt}}</view>
+            </view>
+        </vie>
+        <form class="advice" report-submit="true">
+          <view class="title">您的宝贵意见或者建议</view>
+          <textarea name="textarea" auto-height="true" type="text" placeholder="您可以在这里输入您的意见或建议" placeholder-style="font-size:26rpx;" />
+          <view class="btn">提交</view>
+        </form>
+        <button class="customer" open-type="contact">联系在线客服</button>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import tip from '../util/tip'
+
+export default class Sqa extends wepy.page {
+  config = {
+    navigationBarTitleText: '常见问题',
+    enablePullDownRefresh: true,
+    backgroundColor: '#f6f6f6'
+  }
+  data = {
+    lists: [
+      { title: '请你帮忙怎么玩？', 
+        txt: '“请你帮忙”是一款基于微信群组、朋友圈的强大传播性和及时性衍生而出的社交类帮忙工具。你可以：【发出请求，获取帮助，解决问题】 【提供帮助，解答或分享，获得答谢金】', 
+        toggle: '' 
+      },
+      {
+        toggle: '',
+        title: '关于帮忙内容的审核？',
+        txt:
+          '为了营造良好的网络环境，平台将对所有发出的帮忙进行人工审核，内容审核通过后才可分享出去。如发现不良内容，将对其删除处理，影响恶劣的将封号并冻结余额处理。'
+      },
+      {
+        toggle: '',
+        title: '我支付了答谢金但内容没有发出去怎么办？',
+        txt:
+          '请在【我的记录】-【我的问题】中找到对应的问题记录，点击进入详情后点击【去分享】可把问题发给朋友或者微信群。'
+      },
+      {
+        toggle: '',
+        title: '“请你帮忙”会收取服务费吗？',
+        txt: '系统将在提现时收取1%的服务费（如：提现金额1元，系统将收取0.01元服务费，实际到账0.99元）'
+      },
+      {
+        toggle: '',
+        title: '未领取的答谢金会怎么处理？',
+        txt: '未领取的金额将于24小时后退至“请你帮忙”的账户余额，可在【余额提现】-【账户余额】中查看。'
+      },
+      {
+        toggle: '',
+        title: '收获的答谢金如何提现？',
+        txt:
+          '在【余额提现】页面，点击【提现】，即可根据步骤提现，提现金额不低于1元，可在微信钱包查看提现到账。'
+      },
+      {
+        toggle: '',
+        title: '如何联系客服？（9:00~21:00）',
+        txt:
+          '您可以点击本页面下方的绿色按钮来联系我们的在线客服mimitucao（小曹姐），给我们留言。客服在线时间：9:00~21:00'
+      }
+    ]
+  }
+  onShow () {
+    let that = this
+    that.lists.forEach(function(item) {
+      item.toggle = false
+      that.$apply()
+    })
+  }
+  methods = {
+    setDateId: function(e) {
+      let that = this;
+      let index = e.currentTarget.dataset.index
+      let nowToggle = that.lists[index].toggle
+      that.lists[index].toggle = !nowToggle
+    }
+  }
+}
+</script>

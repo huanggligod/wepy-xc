@@ -1,0 +1,357 @@
+<!-- -->
+<template>
+  <view class="pack-detail">
+    <view class="red-bg">
+        <image class="avatar-image" src="{{avatarImage}}"></image>
+        <text class="nickname">{{nickName}}</text>
+        <block wx:if="{{statu > 1}}">
+            <view class="words">{{words}}</view>
+            <view wx:if="{{showBtn}}">
+                <view class="btns">
+                    <view class="btn input-btn" @tap="showInput">点击输入</view>
+                    <view class="btn" @touchstart="recordeStart" @touchend="recordeEnd">长按发语音</view>
+                </view>
+            </view>
+            <view wx:else> 
+                <from class="form" bindsubmit="formSubmit">
+                    <input class="input" type="text" placeholder="请输入文字" placeholder-style="font-size:30rpx;" />
+                    <view class="img">
+                        <image class="icon-send" src="../images/icon-send.png"></image>
+                    </view>
+                    <view class="img" @tap="hideInput">
+                      <image class="icon-voice" src="../images/icon-voice.png"></image>
+                    </view>
+                </from>
+            </view>
+        </block>
+        <block wx:elif="{{ statu == 0 }}">
+          <view class="unchecked">问题待审核，请稍后领取</view>
+        </block>
+        <block wx:else="{{statu == 1}}">
+            <view class="isnull">答谢金被抢光了</view>
+        </block>  
+        <view class="links">
+          <view class="link" @tap="goTo('/pages/balance')"><image class="icon-cash" src="../images/icon-cash.png"></image><text>去提现</text></view>
+          <view class="link" @tap="goTo('/pages/index')"><image class="icon-cash" src="../images/icon-write.png"></image><text>我也要玩</text></view>
+          <view class="link" @tap="navigaTo('/pages/share')"><image class="icon-cash" src="../images/icon-zhf.png"></image><text>去转发</text></view>
+        </view>
+    </view>
+    <view class="pack-mes">
+      <view class="mes-info">共2元，已领取1/2个</view>
+      <view class="links">
+        <view class="links"><button plain="true" class="customer" open-type="contact">联系客服</button><text @tap="navigaTo('/pages/complaints')">投诉</text></view>
+      </view>
+    </view>
+    <view class="answer-lists" wx:if="{{answerLists.length > 0}}">
+      <view wx:for="{{answerLists}}" class="item">
+        <image class="item-img" src="{{item.image}}"></image>
+        <view class="list-info">
+          <view class="name">{{item.name}}</view>
+          <view class="answer">{{item.answer}}</view>
+          <view class="tip">
+            <text class="time">{{item.time}}</text>
+            <view class="setion + {{sected?'active':''}}" @tap="changeSected">
+              <image src="../images/icon-right.png"></image>
+              <text>采纳</text>
+            </view>
+          </view>
+        </view>
+        <view class="money">1元</view>
+      </view>
+    </view>
+    <view wx:else class="detail-text">未领取的金额，将于24小时后退至余额</view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+
+export default class PackDetail extends wepy.page {
+  config = {
+    navigationBarTitleText: '请你帮忙',
+    enablePullDownRefresh: true,
+    backgroundColor: '#d95940'
+  }
+  data = {
+    sected: false,
+    showBtn: true,
+    statu: 3,
+    avatarImage: '../images/avator.png',
+    nickName: '喵小姐',
+    words: '南昌市青山湖区哪里有特别好吃的串串火锅？不是那种冷锅串串，是四川的串串火锅，请发详细地址，谢谢！',
+    answerLists: [
+      {image: '../images/avator.png', name: '喵小姐', answer: 'lalalalallaalalalallalalalalaaaaallllll静安寺的房间卡时间的看法卡视角啊时代峰峻卡时间段', time: '03月28日 15:30'}
+    ]
+  }
+  methods = {
+    showInput: function() {
+      let that = this
+      that.showBtn = false
+    },
+    hideInput: function() {
+      let that = this
+      that.showBtn = true
+    },
+    goTo: function(url) {
+      wx.switchTab({
+        url: url
+      })
+    },
+    navigaTo(url) {
+      if (url.length === 0) {
+        return
+      }
+      wepy.navigateTo({
+        url: url
+      })
+    },
+    changeSected: function() {
+      let that = this
+      that.sected = !that.sected
+    },
+    recordeStart: function() {
+      let recordeManager = wx.getRecorderManager()
+      const options = {
+        duration: 60000,
+        sampleRate: 16000, // 采样率
+        numberOfChannels: 1, // 录音通道数
+        encodeBitRate: 96000, // 编码码率
+        format: 'mp3', // 音频格式，有效值 aac/mp3
+        frameSize: 50 // 指定帧大小，单位 KB
+      }
+      recordeManager.start(options)
+      recordeManager.onStart(() => {
+        wx.showToast({
+          title: '正在录音',
+          image: '../images/record.gif',
+          duration: 70000
+        })
+      })
+    },
+    recordeEnd: function() {
+      let recordeManager = wx.getRecorderManager()
+      recordeManager.stop()
+      recordeManager.onStop(() => {
+        wx.hideToast()
+      })
+    }
+  }
+}
+</script>
+<style lang='less'>
+  .red-bg {
+      background: #d95940;
+      padding: 30rpx 30rpx 20rpx;
+      .avatar-image {
+          display: block;
+          width: 100rpx;
+          height: 100rpx;
+          border-radius: 50%;
+          border: 4px solid #ecaca0;
+          margin: 0 auto;
+      }
+      .nickname {
+          color: #fff;
+          font-size: 26rpx;
+          display: block;
+          text-align: center;
+          margin-top: 20rpx;
+      }
+      .words {
+          margin-top: 30rpx;
+          font-size: 30rpx;
+          color: #fff;
+          line-height: 1.5;
+      }
+      .btns {
+          display: flex;
+          justify-content: space-around;
+          margin: 50rpx 0;
+          .btn  {
+              width: 300rpx;
+              height: 60rpx;
+              background: #ff8835;
+              color: #fff;
+              text-align: center;
+              line-height: 60rpx;
+              border-radius: 30rpx;
+              font-size: 30rpx;
+          }
+      }
+      .form {
+          display: block;
+          margin: 50rpx 0;
+          display: flex;
+          justify-content: space-around;
+      }
+      .input {
+          background: #fff;
+          width: 510rpx;
+          padding-left: 20rpx;
+          height: 60rpx;
+          border-radius: 10rpx; 
+          color: #9b9b9b;
+          font-size: 30rpx;
+      }
+      .img {
+          height: 60rpx;
+          width: 60rpx;
+          background: #fff;
+          border-radius: 10rpx; 
+          text-align: center;
+          .icon-send {
+              width: 43rpx;
+              height: 44rpx;
+              vertical-align: middle;
+          }
+          .icon-voice {
+              width:34rpx;
+              height: 46rpx;
+              vertical-align: middle;
+          }
+      }
+      .links {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+
+        .link {
+          display: flex;
+          align-items: center;
+        }
+        .icon-cash {
+          width: 25rpx;
+          height: 25rpx;
+          vertical-align: middle;
+        }
+        text {
+          font-size: 30rpx;
+          color: #ffffff;
+          margin-left: 13rpx;
+        }
+      }
+      .unchecked {
+        font-size: 30rpx;
+        color: #fff;
+        background: #ff8835;
+        border-radius: 50rpx;
+        text-align: center;
+        padding: 17rpx 0;
+        margin: 50rpx 0;
+      }
+      .isnull {
+        font-size: 30rpx;
+        color: #000;
+        border-radius: 50rpx;
+        text-align: center;
+        padding: 17rpx 0;
+        margin: 50rpx 0;
+        background: #fff;
+      }
+  }
+  .pack-mes {
+      display: flex;
+      justify-content: space-between;
+      padding: 22rpx 30rpx;
+      background: #f6f6f6;
+      .mes-info {
+          font-size: 26rpx;
+          color: #9b9b9b;
+      }
+      .links {
+          font-size: 28rpx;
+          color: #5d6979;
+          text-align: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          .customer {
+          width: 150rpx;
+          border: none;
+          padding-left: 0;
+          padding-right: 0;
+          color: #5d6979;
+          font-size: 28rpx;
+          margin-left: 0;
+          margin-right: 0;
+          line-height: 1;
+          }
+          text {
+          margin: 0 15rpx;
+          }
+      }
+  }
+  .answer-lists {
+    padding: 0 30rpx;
+
+    .item {
+      padding: 25rpx 20rpx;
+      border-bottom: 2rpx solid #9b9b9b;
+      display: flex;
+      justify-content: space-between;
+    }
+    .item-img {
+      width: 112rpx;
+      height: 112rpx;
+    }
+    .list-info {
+      width: 380rpx;
+      color: #888888;
+      font-size: 26rpx;
+      margin-left: 26rpx;
+      .answer {
+        margin: 24rpx 0;
+        line-height: 1.5;
+      }
+      .tip {
+        display: flex;
+        // align-items: center;
+        .setion {
+          margin-left: 32rpx;
+          margin-top: -4rpx;
+          position: relative;
+          display: flex;
+          align-items: center;
+          &:before {
+            content: '';
+            display: inline-block;
+            width: 22rpx;
+            height: 22rpx;
+            border: 1rpx solid #d95940;
+            margin-right: 9rpx;
+          }
+          image{
+            width: 22rpx;
+            height: 22rpx;
+            position: absolute;
+            left: 2rpx;
+            top: 6rpx;
+            display: none;
+          }
+          &.active {
+            &:before {
+              background: #d95940;
+            }
+            image {
+              display: block;
+            }
+          }
+        }
+      }
+    }
+    .money {
+      flex: 1;
+      text-align: right;
+      color: #888888;
+      font-size: 30rpx;
+      margin-top: 50rpx;
+    }
+  }
+  .detail-text {
+    font-size: 24rpx;
+    color: #888888;
+    text-align: center;
+    margin: 30rpx 0;
+  }
+</style>

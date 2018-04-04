@@ -10,7 +10,7 @@ function isEmptyObject(e) {
 }
 
 // 检测授权状态
-function checkSettingStatu(cb) {
+function checkSettingStatu() {
   let that = this
   // 判断是否是第一次授权，非第一次授权且授权失败则进行提醒
   wx.getSetting({
@@ -20,7 +20,7 @@ function checkSettingStatu(cb) {
       if (isEmptyObject(authSetting)) {
         console.log('首次授权')
       } else {
-        console.log('不是第一次授权', authSetting)
+        // console.log('不是第一次授权', authSetting)
         // 没有授权的提醒
         if (authSetting['scope.userInfo'] === false) {
           wx.showModal({

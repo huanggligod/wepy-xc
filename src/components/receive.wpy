@@ -1,0 +1,88 @@
+<template>
+    <view wx:if="{{receiveList.length > 1}}"> 
+    <repeat for="{{receiveList}}">
+        <navigator class="receive-list"  url="/pages/pack-detail">
+            <view class="item-top">
+                <view class="title">{{item.title}}</view>
+                <view class="money">{{item.money}}元</view>
+            </view>
+            <view class="item-info">
+                <view class="item-time">{{item.creat_time}}</view>
+                <view class="pack-num">{{item.grab_num}}/{{item.redpack_num}}</view>
+            </view>
+        </navigator>
+    </repeat>  
+    </view>
+    <view wx:else>
+        <view class="no-his">还没有记录哦！</view>
+    </view>
+</template>
+<script>
+import wepy from "wepy";
+
+export default class SwiperList extends wepy.component {
+  props = {
+    receiveList: {
+      type: Object,
+      default: []
+    }
+  }
+  data = {
+
+  }
+  components = {
+    
+  }
+
+  onLoad() {}
+  computed = {}
+
+  methods = {}
+  events = {}
+}
+</script>
+<style lang="less">
+    .receive-list {
+        width: 690rpx;
+        padding: 25rpx 20rpx;
+        background-color: #fff;
+        margin: 0 auto 20rpx;
+        border-radius: 10rpx;
+        box-sizing: border-box;
+        .item-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #888888;
+            font-size: 26rpx;
+
+            .title {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                word-wrap: break-word;
+                overflow: hidden;
+                -webkit-box-pack: center;
+                width: 520rpx;
+                line-height: 1.5;
+            }
+        }
+        .item-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #b2b2b2;
+            font-size: 24rpx;
+            margin-top: 24rpx;
+        }
+    }
+    .no-his {
+        width: 690rpx;
+        margin: 0 auto;
+        color: #b2b2b2;
+        font-size: 30rpx;
+        border: 1rpx dashed #b2b2b2;
+        text-align: center;
+        padding: 16rpx 0;
+    }
+</style>

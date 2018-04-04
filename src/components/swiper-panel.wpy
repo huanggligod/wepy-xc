@@ -1,0 +1,88 @@
+<template>
+    <view class="swiper-panel">
+        <image class="avatar" src="{{userInfo.avatarUrl}}"></image>
+        <view class="panel-title">{{userInfo.nickName}} 共发出</view>
+        <view class="panel-boxs">
+            <view class="box">
+            <text>问题 (个)</text>
+            <text class="num">{{num}}</text>
+            </view>
+            <view class="box">
+            <text>金额 (元)</text>
+            <text class="num">{{money}}</text>
+            </view>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+
+export default class ReceivePanel extends wepy.component {
+  props = {
+    userInfo: {
+      type: Object,
+      default: []
+    },
+    num: {
+      type: Number,
+      default: ''
+    },
+    money: {
+      type: Number,
+      default: ''
+    }
+  }
+  data = {}
+  components = {}
+
+  onLoad() {}
+  computed = {}
+
+  methods = {}
+  events = {}
+}
+</script>
+<style lang="less">
+.swiper-panel {
+  margin: 90rpx auto 0;
+  background-color: #d95940;
+  position: relative;
+  padding: 115rpx 0 75rpx;
+  border-radius: 10rpx;
+  width: 690rpx;
+  box-sizing: border-box;
+  .avatar {
+    width: 140rpx;
+    height: 140rpx;
+    border: 4rpx solid #d95940;
+    border-radius: 50%;
+    position: absolute;
+    top: -70rpx;
+    left: 50%;
+    margin-left: -70rpx;
+    background: #d95940;
+  }
+  .panel-title {
+    color: #fff;
+    font-size: 30rpx;
+    text-align: center;
+  }
+  .panel-boxs {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 80rpx;
+  }
+  .box {
+    text-align: center;
+    text {
+      color: #fff;
+      font-size: 30rpx;
+      display: block;
+    }
+    .num {
+      font-size: 48rpx;
+      margin-top: 30rpx;
+    }
+  }
+}
+</style>

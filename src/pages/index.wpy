@@ -1,6 +1,10 @@
 <style lang="less">
+  page {
+    height: 100%;
+  }
   .container {
     padding: 0 30rpx;
+    height: 100%;
   }
   .head {
     .avatarurl {
@@ -36,7 +40,7 @@
       .txt {
         width: 100%;
         line-height: 1.5;
-        color: #d2d2d2;  
+        color: #000;  
       }
     }
   }
@@ -74,11 +78,11 @@
     }
 
     .input-box {
-      font-size: 24rpx;
+      font-size: 26rpx;
       padding-left: 4rpx;
       margin-top: 26rpx;
       border-bottom: 1rpx solid #888888;
-      color: #888888;
+      color: #000;
     }
   }
   .money-radios {
@@ -185,13 +189,13 @@
   color: #fff;
   text-align: center;
   border-radius: 10rpx;
-  margin: 30rpx 0;
+  margin: 20rpx 0;
 }
 .notic-txt {
   color: #d95940;
   font-size: 24rpx;
   line-height: 1.5;
-  padding: 20px;
+  padding: 20rpx;
   border: 2rpx dashed #d95940;
   border-radius: 10rpx;
   margin-bottom: 10rpx;
@@ -203,7 +207,7 @@
       <image class="avatarurl" src="{{userInfo.avatarUrl}}"></image>
     </view>
     <view class="trable-iput">
-      <text class="iput-tit">我的烦恼</text>
+      <text class="iput-tit">请你帮忙</text>
       <view class="section">
         <textarea class="txt" placeholder="请输入你想得到帮助的问题（如：请问某某市某某区哪里有好吃的串串火锅？" maxlength="-1" placeholder-style="color:#d2d2d2;"></textarea>
       </view>
@@ -247,17 +251,17 @@
           </label>
         </radio-group>
         <view class="input-box" hidden="{{Hidden2==0?false:true}}">
-          <input type="number" bindblur="getNum" placeholder="请输入数量" placeholder-style="font-size:26rpx;"/>
+          <input type="number" bindinput="getNum" placeholder="请输入数量" placeholder-style="font-size:26rpx;"/>
         </view>
         <image class="img2" src="../images/icon-num.png"></image>
       </view>
     </view>
     <view class="tips-box">
-      <text class="{{tipShow1?'show':'hide'}}">提示语 金额不可低于1元</text>
-      <text class="{{tipShow2?'show':'hide'}}">提示语 人数不可低于1人</text>
+      <text class="{{tipShow1?'show':'hide'}}">金额不可低于1元</text>
+      <text class="{{tipShow2?'show':'hide'}}">人数不可低于1人</text>
     </view>
     <radio-group class="section-show" bindchange="showChange">
-      <label class="{{showCheckVal==1?'show':''}}">匿名发布
+      <label class="{{showCheckVal==1?'show':''}}">匿名
         <image class="check-icon" src="../images/icon-right.png"></image>
         <radio value="1" hidden="true"></radio>
       </label>
@@ -266,8 +270,7 @@
         <radio value="2" hidden="true"></radio>
       </label>
     </radio-group>
-    <text class="consumption">需支付￥{{conSumpTion}}服务费</text>
-    <view class="creat-btn">生成问题红包</view>
+    <view class="creat-btn" @tap="Generate">生成问题红包</view>
     <view class="notic-txt">为了营造良好的网络环境，平台将对所有发出的问题进行人工审核，如发现不良信息，将对其删除处理，影响恶劣的将封号并冻结余额处理，谢谢大家的配合。</view>
   </view>
     
@@ -281,8 +284,8 @@ import shareMessage from '../mixins/shareMessage'
 
 export default class Index extends wepy.page {
   config = {
-    navigationBarTitleText: '我的烦恼',
-    enablePullDownRefresh: true
+    enablePullDownRefresh: true,
+    navigationBarTitleText: '请你帮忙'
   }
 
   data = {
@@ -293,24 +296,26 @@ export default class Index extends wepy.page {
     Hidden: 1,
     Hidden2: 1,
     money: '',
-    conSumpTion: '0.01',
     num: '',
     tipShow1: false,
     tipShow2: false
-
   }
 
   mixins = [shareMessage]
   
   async onLoad () {
     let that = this
-    await wepy.login()
-    let c = await wepy.getUserInfo()
-    that.userInfo = c.userInfo
+    // await wepy.login()
+    // let c = await wepy.getUserInfo()
+    await this.$parent.checkLoginState()
+    let userInfo = wepy.getStorageSync('userInfo')
+    console.log(userInfo)
+    that.userInfo = userInfo
+    // wepy.setStorageSync('userInfo',c.userInfo)
     that.$apply()
   }
 
-  onShow () {
+  async onShow () {
     checkSettingStatu()
   }
   methods = {
@@ -345,13 +350,12 @@ export default class Index extends wepy.page {
         }, 3000)
       }
       that.money = val
-      that.conSumpTion = val * 0.01 || 0.01
     },
     getNum: function(e) {
       let that = this
       let num = e.detail.value
       let isShow
-      if (!num) {
+      if (num < 1) {
         that.tipShow2 = true
         isShow = true
       }
@@ -361,7 +365,16 @@ export default class Index extends wepy.page {
           that.$apply()
         }, 3000)
       }
+    },
+    Generate: function() {
+
     }
+  }
+  async onPullDownRefresh () {
+    tip.loading()
+    await wepy.stopPullDownRefresh()
+    tip.loaded()
+    
   }
 }
 </script>

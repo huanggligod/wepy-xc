@@ -1,0 +1,160 @@
+<!--  -->
+<template>
+  <view class="share-wrap">
+    <image class="headimg" src="{{headimg}}"></image>
+    <view class="tit">发了一个问题<image src="../images/icon-ques.png"></image></view>
+    <view class="words">{{word}}</view>
+    <image class="img" src="../images/pack-bg.png"></image>
+    <view class="btns">
+      <button type="primary" class="share-btn" open-type="share">转发给好友或群聊</button>
+      <button class="save-btn" @tap="saveImg">保存图片</button>
+      <view class="toindex" @tap="goTo('/pages/index')">我也试一试</view>
+    </view>
+    <navigator class="sqa" hover-class="none" url="/pages/sqa">常见问题</navigator>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import tip from '../util/tip'
+
+export default class Share extends wepy.page {
+  config = {
+    navigationBarTitleText: '请你帮忙',
+    backgroundColor: '#d95940',
+    enablePullDownRefresh: true
+  }
+
+  data = {
+    headimg: '../images/avator.png',
+    word: '啦啦啦啦啦啦啦啦',
+    img_url: '../images/square-logo.png'
+  }
+
+  methods = {
+    goTo: function(url) {
+      wx.switchTab({
+        url: url
+      })
+    },
+    saveImg:function() {
+      let that = this
+      wx.getImageInfo({
+        src: '',
+        success: function (res) {
+         let path = res.path
+          wx.getSetting({
+            success(res) {
+              if (!res.authSetting['scope.writePhotosAlbum']) {
+                wx.authorize({
+                  scope: 'scope.writePhotosAlbum',
+                  success() {
+                    wx.saveImageToPhotosAlbum({
+                      filePath: path,
+                      success: function(result) {
+                        console.log(result)
+                        tip.success('保存成功', 500)
+                      },
+                      fail: function(res) {
+                        console.log(res)
+                      }
+                    })
+                  }
+                })
+              } else {
+                wx.saveImageToPhotosAlbum({
+                  filePath: path,
+                  success: function(result) {
+                    console.log(result)
+                    tip.success('保存成功', 500)
+                  },
+                  fail: function(res) {
+                    console.log(res)
+                  },
+                  complete: function(res) {
+                    console.log(res)
+                  }
+                })
+              }
+            }
+          })
+        }
+      })
+    }
+  }
+}
+</script>
+
+<style lang='less'>
+  page {
+    height: 100%;
+    overflow: hidden;
+  }
+  .share-wrap {
+    height: 100%;
+    background: #d95940;
+    overflow: hidden;
+    .headimg {
+      display: block;
+      width: 90rpx;
+      height: 90rpx;
+      border-radius: 6rpx;
+      margin: 0 auto 0;
+      padding-top: 20rpx;
+    }
+    .tit {
+      display: block;
+      color: #ffe7b3;
+      font-size: 30rpx;
+      text-align: center;
+      margin: 16rpx 0 34rpx;
+
+      image {
+        width: 29rpx;
+        height: 35rpx;
+        vertical-align: middle;
+        margin-left: 10rpx;
+      }
+    }
+    .words {
+      width: 600rpx;
+      font-size: 36rpx;
+      color: #ffe7b3;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .img {
+      width: 750rpx;
+      height: 250rpx;
+      display: block;
+      margin-top: 75rpx;
+    }
+
+    .btns {
+      width: 690rpx;
+      margin: 70rpx auto 0;
+      background: #fff;
+      border-radius: 10rpx;
+      padding: 35rpx 30rpx;
+      box-sizing: border-box;
+
+      .save-btn {
+        margin-top: 25rpx;
+      }
+    }
+    .toindex {
+      font-size: 26rpx;
+      color: #5d5d5d;
+      margin: 30rpx 0;
+      text-align: center;
+    }
+    .sqa {
+      font-size: 26rpx;
+      color: #fff;
+      position: absolute;
+      width: 100%;
+      bottom: 33rpx;
+      text-align: center;
+    }
+  }
+</style>

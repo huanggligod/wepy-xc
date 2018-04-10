@@ -1,6 +1,7 @@
 <style lang="less">
   page {
     height: 100%;
+    background: #f6f6f6;
   }
   .container {
     padding: 0 30rpx;
@@ -112,7 +113,7 @@
     width: 100%;
     margin: 30rpx 0;
 
-    label {
+    .label {
       font-size: 26rpx;
       color: #9a9a9a;
       display: flex;
@@ -140,7 +141,7 @@
         z-index: 2;
         margin-right: 10rpx;
       }
-      &.show {
+      &.has {
         &:before {
           background: #9a9a9a; 
         }
@@ -184,7 +185,6 @@
 }
 .creat-btn {
   width: 100%;
-  padding: 25rpx 0;
   background: #d95940;
   color: #fff;
   text-align: center;
@@ -206,72 +206,74 @@
     <view class="head">
       <image class="avatarurl" src="{{userInfo.avatarUrl}}"></image>
     </view>
-    <view class="trable-iput">
-      <text class="iput-tit">请你帮忙</text>
-      <view class="section">
-        <textarea class="txt" placeholder="请输入你想得到帮助的问题（如：请问某某市某某区哪里有好吃的串串火锅？" maxlength="-1" placeholder-style="color:#d2d2d2;"></textarea>
-      </view>
-    </view>
-    <view class="packet-boxs">
-      <view class="money-box">
-        <text>答谢金(元):</text>
-        <radio-group class="money-radios" hidden="{{Hidden==0?true:false}}" bindchange="radioChange">
-          <label class="{{radioCheckVal==1?'active':''}}">1
-            <radio value="1" hidden="true"></radio>
-          </label>
-          <label class="{{radioCheckVal==3?'active':''}}">3
-            <radio value="3" hidden="true"></radio>
-          </label>
-          <label class="{{radioCheckVal==5?'active':''}}">5
-            <radio value="5" hidden="true"></radio>
-          </label>
-          <label style="font-size:36rpx;">···
-            <radio value="0" hidden="true"></radio>
-          </label>
-        </radio-group>
-        <view class="input-box" hidden="{{Hidden==0?false:true}}">
-          <input type="digit" bindinput="getConsumption" placeholder="请输入金额" placeholder-style="font-size:26rpx;"/>
+    <form bindreset="formReset">
+      <view class="trable-iput">
+        <text class="iput-tit">请你帮忙</text>
+        <view class="section">
+          <textarea class="txt" bindblur="getWords" placeholder="请输入你想得到帮助的问题（如：请问某某市某某区哪里有好吃的串串火锅？" maxlength="-1" placeholder-style="color:#d2d2d2;"></textarea>
         </view>
-        <image src="../images/icon-money.png"></image>
       </view>
-      <view class="money-box">
-        <text>总数量(个):</text>
-        <radio-group class="money-radios" hidden="{{Hidden2==0?true:false}}" bindchange="radioChange2">
-          <label class="{{radioCheckVal2==1?'active':''}}">1
-            <radio value="1" hidden="true"></radio>
-          </label>
-          <label class="{{radioCheckVal2==3?'active':''}}">3
-            <radio value="3" hidden="true"></radio>
-          </label>
-          <label class="{{radioCheckVal2==5?'active':''}}">5
-            <radio value="5" hidden="true"></radio>
-          </label>
-          <label style="font-size:36rpx;">···
-            <radio value="0" hidden="true"></radio>
-          </label>
-        </radio-group>
-        <view class="input-box" hidden="{{Hidden2==0?false:true}}">
-          <input type="number" bindinput="getNum" placeholder="请输入数量" placeholder-style="font-size:26rpx;"/>
+      <view class="packet-boxs">
+        <view class="money-box">
+          <text>答谢金(元):</text>
+          <radio-group class="money-radios" hidden="{{Hidden==0?true:false}}" bindchange="radioChange">
+            <label class="{{radioCheckVal==1?'active':''}}">1
+              <radio value="1" hidden="true"></radio>
+            </label>
+            <label class="{{radioCheckVal==3?'active':''}}">3
+              <radio value="3" hidden="true"></radio>
+            </label>
+            <label class="{{radioCheckVal==5?'active':''}}">5
+              <radio value="5" hidden="true"></radio>
+            </label>
+            <label style="font-size:36rpx;">···
+              <radio value="0" hidden="true"></radio>
+            </label>
+          </radio-group>
+          <view class="input-box" hidden="{{Hidden==0?false:true}}">
+            <input type="digit" bindinput="getConsumption" placeholder="请输入金额" placeholder-style="font-size:26rpx;"/>
+          </view>
+          <image src="../images/icon-money.png"></image>
         </view>
-        <image class="img2" src="../images/icon-num.png"></image>
+        <view class="money-box">
+          <text>总数量(个):</text>
+          <radio-group class="money-radios" hidden="{{Hidden2==0?true:false}}" bindchange="radioChange2">
+            <label class="{{radioCheckVal2==1?'active':''}}">1
+              <radio value="1" hidden="true"></radio>
+            </label>
+            <label class="{{radioCheckVal2==3?'active':''}}">3
+              <radio value="3" hidden="true"></radio>
+            </label>
+            <label class="{{radioCheckVal2==5?'active':''}}">5
+              <radio value="5" hidden="true"></radio>
+            </label>
+            <label style="font-size:36rpx;">···
+              <radio value="0" hidden="true"></radio>
+            </label>
+          </radio-group>
+          <view class="input-box" hidden="{{Hidden2==0?false:true}}">
+            <input type="number" bindinput="getNum" placeholder="请输入数量" placeholder-style="font-size:26rpx;"/>
+          </view>
+          <image class="img2" src="../images/icon-num.png"></image>
+        </view>
       </view>
-    </view>
-    <view class="tips-box">
-      <text class="{{tipShow1?'show':'hide'}}">金额不可低于1元</text>
-      <text class="{{tipShow2?'show':'hide'}}">人数不可低于1人</text>
-    </view>
-    <radio-group class="section-show" bindchange="showChange">
-      <label class="{{showCheckVal==1?'show':''}}">匿名
-        <image class="check-icon" src="../images/icon-right.png"></image>
-        <radio value="1" hidden="true"></radio>
-      </label>
-      <label class="{{showCheckVal==2?'show':''}}">公开至解忧广场
-        <image class="check-icon" src="../images/icon-right.png"></image>
-        <radio value="2" hidden="true"></radio>
-      </label>
-    </radio-group>
-    <view class="creat-btn" @tap="Generate">生成问题红包</view>
-    <view class="notic-txt">为了营造良好的网络环境，平台将对所有发出的问题进行人工审核，如发现不良信息，将对其删除处理，影响恶劣的将封号并冻结余额处理，谢谢大家的配合。</view>
+      <view class="tips-box">
+        <text class="{{tipShow1?'show':'hide'}}">金额不可低于1元</text>
+        <text class="{{tipShow2?'show':'hide'}}">人数不可低于1人</text>
+      </view>
+      <view class="section-show" bindchange="showChange">
+        <view class="label + {{showCheckVal?'has':''}}" data-id="{{showCheckVal?'0':'1'}}" @tap="changeVal">匿名
+          <image class="check-icon" src="../images/icon-right.png"></image>
+          <!-- <checkbox value="" hidden="true"></checkbox> -->
+        </view>
+        <view class="label + {{showCheckVal2?'has':''}}" data-id="{{showCheckVal2?'0':'1'}}" @tap="changeVal2">公开至解忧广场
+          <image class="check-icon" src="../images/icon-right.png"></image>
+          <!-- <checkbox value="1" hidden="true"></checkbox> -->
+        </view>
+      </view>
+      <button class="creat-btn" @tap="generate" formType="reset">生成问题红包</button>
+      <view class="notic-txt">为了营造良好的网络环境，平台将对所有发出的问题进行人工审核，如发现不良信息，将对其删除处理，影响恶劣的将封号并冻结余额处理，谢谢大家的配合。</view>
+    </form>
   </view>
     
 </template>
@@ -292,30 +294,42 @@ export default class Index extends wepy.page {
     userInfo: {},
     radioCheckVal: '',
     radioCheckVal2: '',
-    showCheckVal: '2',
+    showCheckVal: false,
+    showCheckVal2: false,
     Hidden: 1,
     Hidden2: 1,
+    isAnony: '',
+    isSquare: '',
+    inputMoney: '',
+    inputNum: '',
     money: '',
     num: '',
+    words: '',
+    token: '',
     tipShow1: false,
     tipShow2: false
   }
 
   mixins = [shareMessage]
-  
   async onLoad () {
     let that = this
     // await wepy.login()
     // let c = await wepy.getUserInfo()
     await this.$parent.checkLoginState()
-    let userInfo = wepy.getStorageSync('userInfo')
-    console.log(userInfo)
+    let userInfo = await wepy.getStorageSync('userInfo')
     that.userInfo = userInfo
+    that.token = await wepy.getStorageSync('token')
+    console.log(that.token)
     // wepy.setStorageSync('userInfo',c.userInfo)
     that.$apply()
   }
 
   async onShow () {
+    this.radioChange = ''
+    this.radioChange2 = ''
+    this.isSquare = ''
+    this.isAnony = ''
+    this.words = ''
     checkSettingStatu()
   }
   methods = {
@@ -323,17 +337,27 @@ export default class Index extends wepy.page {
       let that = this
       that.radioCheckVal = e.detail.value
       that.Hidden = e.detail.value
-      that.$apply()
+      that.money = that.radioCheckVal
+    },
+    getWords: function(e) {
+      let that = this
+      that.words = e.detail.value
     },
     radioChange2: function(e) {
       let that = this
       that.radioCheckVal2 = e.detail.value
       that.Hidden2 = e.detail.value
-      that.$apply()
+      that.num = that.radioCheckVal2
     },
-    showChange: function(e) {
+    changeVal: function(e) {
       let that = this
-      that.showCheckVal = e.detail.value
+      that.showCheckVal = !that.showCheckVal
+      that.isAnony = e.currentTarget.dataset.id
+    },
+    changeVal2: function(e) {
+      let that = this
+      that.showCheckVal2 = !that.showCheckVal2
+      that.isSquare = e.currentTarget.dataset.id
     },
     getConsumption: function(e) {
       let that = this
@@ -351,6 +375,9 @@ export default class Index extends wepy.page {
       }
       that.money = val
     },
+    formReset: function() {
+      console.log('form发生了reset事件')
+    },
     getNum: function(e) {
       let that = this
       let num = e.detail.value
@@ -365,11 +392,64 @@ export default class Index extends wepy.page {
           that.$apply()
         }, 3000)
       }
+      that.num = num
     },
-    Generate: function() {
-
+    async generate() {
+      let that = this
+      console.log(that.money, that.num)
+      let data = {
+        words: that.words,
+        amount: that.money,
+        num: that.num,
+        anony: that.isAnony,
+        square: that.isSquare
+      }
+      if (that.words.length < 20) {
+        tip.confirmT('问题字数不能少于20字')
+      } else if (!that.isAnony && !that.isSquare) {
+        tip.confirmT('请选择发布场景')
+      } else {
+        await wepy.request({
+          url: 'https://m.tdamm.com/weapp/api/trouble/pay?token=' + that.token,
+          method: 'POST',
+          data: data,
+          header: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then(res => {
+          console.log(res.data.id)
+          let dataId = res.data.id
+          if (res.data.code == 200) {
+            let payInfo = res.data.pay_info
+            wx.requestPayment({
+              'timeStamp': payInfo.timeStamp,
+              'nonceStr': payInfo.nonceStr,
+              'package': payInfo.package,
+              'signType': 'MD5',
+              'paySign': payInfo.paySign,
+              'success':function(res){
+                that.showCheckVal = false
+                that.showCheckVal2 = false
+                wx.navigateTo({
+                  url: 'share?id=' + dataId
+                })
+              },
+              'fail':function(res){
+              }
+            })
+          }else {
+            tip.alert(res.data.msg)
+          }
+          
+        }).catch(res => {
+          tip.error(res.data.msg)
+        })
+      }
+      
+      
     }
   }
+  
   async onPullDownRefresh () {
     tip.loading()
     await wepy.stopPullDownRefresh()

@@ -1,6 +1,7 @@
 <style lang="less">
 page {
   height: 100%;
+  background: #f6f6f6;
 }
 .sqa-wrap {
   height: 100%;
@@ -62,6 +63,7 @@ page {
     color: #000;
     padding: 26rpx 0;
     border-bottom: 1rpx solid #ededed;
+    font-weight: 600;
   }
   textarea {
     display: block;
@@ -72,15 +74,16 @@ page {
   .btn {
     position: absolute;
     width: 150rpx;
-    padding: 10rpx 0;
     background: #888888;
     color: #fff;
     text-align: center;
     right: 22rpx;
-    top: 16rpx;
+    top: 8rpx;
     font-size: 26rpx;
     border-radius: 10rpx;
-    
+    &.active {
+      background: #1aad19;
+    }
   }
 }
 </style>
@@ -95,10 +98,10 @@ page {
                 <view class="list-txt" wx:if="{{item.toggle}}">{{item.txt}}</view>
             </view>
         </vie>
-        <form class="advice" report-submit="true">
+        <form class="advice" report-submit="true" bindsubmit="formSub">
           <view class="title">您的宝贵意见或者建议</view>
-          <textarea name="textarea" auto-height="true" type="text" placeholder="您可以在这里输入您的意见或建议" placeholder-style="font-size:26rpx;" />
-          <view class="btn">提交</view>
+          <textarea name="textarea" auto-height="true" type="text"  bindblur="changeDis" placeholder="您可以在这里输入您的意见或建议" placeholder-style="font-size:26rpx;" />
+          <button class="btn + {{!disabled?'active':''}}"  disabled="{{disabled}}" formType="submit">提交</button>
         </form>
         <button class="customer" open-type="contact">联系在线客服</button>
     </view>
@@ -115,8 +118,9 @@ export default class Sqa extends wepy.page {
     backgroundColor: '#f6f6f6'
   }
   data = {
+    disabled: true,
     lists: [
-      { title: '请你帮忙怎么玩？', 
+      { title: '“请你帮忙”怎么玩？', 
         txt: '“请你帮忙”是一款基于微信群组、朋友圈的强大传播性和及时性衍生而出的社交类帮忙工具。你可以：【发出请求，获取帮助，解决问题】 【提供帮助，解答或分享，获得答谢金】', 
         toggle: '' 
       },
@@ -152,7 +156,7 @@ export default class Sqa extends wepy.page {
         toggle: '',
         title: '如何联系客服？（9:00~21:00）',
         txt:
-          '您可以点击本页面下方的绿色按钮来联系我们的在线客服mimitucao（小曹姐），给我们留言。客服在线时间：9:00~21:00'
+          '您可以点击本页面下方的绿色按钮来联系我们的在线客服，给我们留言。客服在线时间：9:00~21:00'
       }
     ]
   }
@@ -163,13 +167,44 @@ export default class Sqa extends wepy.page {
       that.$apply()
     })
   }
+  onLoad () {
+    this.token = wepy.getStorageSync('token')
+  }
   methods = {
     setDateId: function(e) {
       let that = this;
       let index = e.currentTarget.dataset.index
       let nowToggle = that.lists[index].toggle
       that.lists[index].toggle = !nowToggle
+    },
+    changeDis: function(e) {
+      let that = this
+      if (e.detail.value.length > 0) {
+        that.disabled = false
+      } 
     }
+  }
+  formSub(e) {
+    let that = this
+    let form_id = e.detail.formId
+    console.log(e)
+    console.log(form_id)
+    wepy.request({
+      url: 'https://m.tdamm.com/weapp/api/trouble/save_temp_id?token=' + this.token,
+      method: 'POST',
+      data: {
+        formId: form_id
+      }
+    }).then(res => {
+      console.log(res)
+      if (res.data.code == 200) {
+        tip.success('提交成功')
+      } else {
+        tip.confirm(res.data.msg)
+      }
+    }).catch(res => {
+      console.log(res)
+    })
   }
 }
 </script>

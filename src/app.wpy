@@ -13,6 +13,8 @@
 <script>
 import wepy from 'wepy'
 import 'wepy-async-function'
+import { dataFormat } from './util/util'
+import tip from './util/tip'
 
 export default class extends wepy.app {
   config = {
@@ -81,23 +83,14 @@ export default class extends wepy.app {
     //   config(p) {
     //     return p
     //   },
-    //   success(response) {
-    //     if (response.statusCode === 200) {
-    //       if (response.data.code === 200){
-    //          return response.data
-    //       } else {
-    //         alert(response.data.msg)
-    //       }
-    //     } else {
-    //       wepy.showModal({
-    //         title: '出错了。。',
-    //         content: '请下拉重新加载页面'
-    //       })
-    //       wepy.clearStorageSync()
+    //   success(res) {
+    //     if (res.data.code == 200 ) {
+    //       return res.data.records
     //     }
     //   },
-    //   fail(response) {
-    //     return response
+    //   fail(p) {
+    //     console.log(p)
+    //     return p
     //   }
     // })
   }
@@ -111,22 +104,33 @@ export default class extends wepy.app {
         let c = await wepy.getUserInfo()
         that.globalData.userInfo = c.userInfo
         wepy.setStorageSync('userInfo', c.userInfo)
-        wepy.request({
+        await wepy.request({
           url: 'https://m.tdamm.com/weapp/member/login',
           method: 'POST',
           data: {
             code: resp.code,
             encryptedData: c.encryptedData,
-            iv: c.iv
+            iv: c.iv,
+            type: 'trouble' 
           },
           header: {
             'Content-Type': 'application/x-www-form-urlencoded'
           }
         })
         .then(res => {
-          if (res.data.token) {
-            wepy.setStorageSync('token', res.data.token)
+          console.log(res.data)
+          if (res.data.code == 200) {
+            if (res.data.token) {
+              let token = encodeURIComponent(res.data.token)
+              let uid = res.data.uid
+              wepy.setStorageSync('token', token)
+              wepy.setStorageSync('uid', uid)
+              console.log(uid)
+            }
+          } else {
+            tip.alert('登录失败')
           }
+          
         }).catch(data => {
           console.log(data)
         })

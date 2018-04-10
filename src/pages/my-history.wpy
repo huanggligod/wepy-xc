@@ -33,7 +33,8 @@
       min-height: 90%;
     }
     .swiper-item {
-      width: 100%;  
+      width: 100%;
+      overflow-y: auto;  
     }
     .lists {
       margin-top: 30rpx;
@@ -48,17 +49,22 @@
     </view>
     <swiper duration="{{duration}}" current="{{current}}" bindchange="changeCurrent">
       <swiper-item class="swiper-item">
-          <receivePanel :userInfo.sync="userInfo" :num.sync="receiveNum" :money.sync="receiveMoney"></receivePanel>
-          <view class="lists">
-            <receiveList :receiveList.sync="receiveList"></receiveList>
-          </view>        
+        <receivePanel :userInfo.sync="userInfo" :current.sync="current" :num.sync="receiveNum" :money.sync="receiveMoney"></receivePanel>
+        <view class="lists">
+          <receiveList :receiveList.sync="receiveList"></receiveList>
+        </view>
+        <!--暂无数据显示-->
+        <placeholder :isEmpty.sync="isEmpty" message="暂无发现数据"></placeholder>        
       </swiper-item>
-      <swiper-item>
-        <replyPanel :userInfo.sync="userInfo" :num.sync="replyNum" :money.sync="replyMoney"></replyPanel>
+      <swiper-item class="swiper-item">
+        <replyPanel :userInfo.sync="userInfo" :current.sync="current" :num.sync="replyNum" :money.sync="replyMoney"></replyPanel>
         <view class="lists">
           <replyList :replyList.sync="replyList"></replyList>
-        </view>  
-      </swiper-item>
+        </view>
+        <!--暂无数据显示-->
+        <placeholder :isEmpty.sync="isEmpty2" message="暂无发现数据"></placeholder>
+      </swiper-item> 
+     
     </swiper>
     
   </view>
@@ -70,6 +76,9 @@ import { checkSettingStatu } from '../util/util'
 import ReceiveList from '../components/receive'
 import ReplyList from '../components/reply-list'
 import SwiperPanel from '../components/swiper-panel'
+import LoadMore from '../components/loadmore'
+import Placeholder from '../components/placeholder'
+import tip from '../util/tip'
 
 export default class MyHistory extends wepy.page {
   config = {
@@ -81,52 +90,117 @@ export default class MyHistory extends wepy.page {
     receiveList: ReceiveList,
     receivePanel: SwiperPanel,
     replyPanel: SwiperPanel,
-    replyList: ReplyList
+    replyList: ReplyList,
+    bottomLoadMore: LoadMore,
+    placeholder: Placeholder
   }
   data = {
     userInfo: '',
-    duration: 500,
+    duration: '500',
     current: '0',
-    receiveNum: 5,
-    receiveMoney: 10,
-    replyNum: 2,
-    replyMoney: 5,
-    receiveList: [
-      {
-        title: '南昌青山湖区哪里有特别好吃的串串火锅？不是那种冷锅串串，是四川的串串火锅,请问有谁知道吗',
-        money: '1',
-        creat_time: '03月28日 15:35',
-        redpack_num: '1',
-        grab_num: '1'
-      },
-      {
-        title: '南昌青山湖区哪里有特别好吃的串串火锅？不是那种冷锅串串，是四川的串串火锅,请问有谁知道吗',
-        money: '1',
-        creat_time: '03月29日 15:35',
-        redpack_num: '2',
-        grab_num: '1'
-      }
-    ],
-    replyList: [
-      {
-        title: '南昌青山湖区哪里有特别好吃的串串火锅？不是那种冷锅串串，是四川的串串火锅,请问有谁知道吗',
-        amount: '1',
-        image: '../images/avator.png'
-      },
-      {
-        title: '南昌青山湖区哪里有特别好吃的串串火锅？不是那种冷锅串串，是四川的串串火锅,请问有谁知道吗',
-        amount: '1',
-        image: '../images/avator.png'
-      }
-    ]
+    receiveNum: '',
+    receiveMoney: '',
+    replyNum: '',
+    replyMoney: '',
+    token: '',
+    sendPage: '',
+    replyPage: '',
+    sendTotal: '',
+    replyTotal: '',
+    isEmpty: false,
+    isEmpty2: false,
+    receiveList: [],
+    replyList: []
   }
-  onLoad () {
+  async onLoad () {
     let that = this
-    let userInfo = wepy.getStorageSync('userInfo')
+    let userInfo = await wepy.getStorageSync('userInfo')
     that.userInfo = userInfo
+   
   }
   async onShow () {
-    await this.$parent.checkLoginState()
+    checkSettingStatu()
+    this.token = await wepy.getStorageSync('token')
+    await this.onPullDownRefresh()
+  }
+  async getUserSendData () {
+    let that = this
+    await wepy.request({
+      url: 'https://m.tdamm.com/weapp/api/trouble/user_data_for_send?token=' + that.token,
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }).then(res => {
+      that.receiveNum = res.data.total_num
+      that.receiveMoney = res.data.total_amount
+      that.$apply()
+    }).catch(res => {
+      console.log(res)
+    })
+
+  }
+  async getUserSendList () {
+    let that = this
+    tip.loading()
+    await wepy.request({
+      url: 'https://m.tdamm.com/weapp/api/trouble/send_records?token=' + that.token,
+      method: 'POST',
+      data: {
+        page: that.sendPage
+      },
+      header: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }).then(res => {
+      console.log(res)
+      that.sendTotal = res.data.total_page
+      that.receiveList = res.data.records
+      that.$apply()
+    }).catch(res => {
+      console.log(res)
+    })
+    tip.loaded()
+  }
+  async getUserGetList () {
+    let that = this
+    tip.loading()
+    await wepy.request({
+      url: 'https://m.tdamm.com/weapp/api/trouble/get_records?token=' + that.token,
+      method: 'POST',
+      data: {
+        page: that.replyPage
+      },
+      header: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }).then(res => {
+      console.log(res)
+      that.replyTotal = res.data.total_page
+      that.replyList = res.data.records
+      that.$apply()
+    }).catch(res => {
+      console.log(res)
+    })
+    tip.loaded()
+  }
+  async getUserGetData () {
+    let that = this
+    await wepy.request({
+      url: 'https://m.tdamm.com/weapp/api/trouble/user_data_for_get?token=' + that.token,
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }).then(res => {
+      console.log(res)
+      that.replyNum = res.data.total_num
+      that.replyMoney = res.data.total_amount
+      that.$apply()
+    }).catch(res => {
+      console.log(res)
+    })
+
   }
   methods = {
     changeCurrent: function(e) {
@@ -139,6 +213,87 @@ export default class MyHistory extends wepy.page {
       let id = e.currentTarget.dataset.id
       that.current = id
     }
+  }
+  async onPullDownRefresh(){
+    let that = this
+    that.sendPage = 1
+    that.replyPage = 1
+    await that.getUserSendData()
+    await that.getUserSendList()
+    await that.getUserGetData()
+    await that.getUserGetList()
+    wx.stopPullDownRefresh()
+  }
+  async onReachBottom() {
+    let that = this
+    if (that.current == 0) {
+      if (that.sendTotal > that.sendPage) {
+        tip.loading()
+        //防止重复加载
+        if (that.preventRepeatReuqest) {
+          return true
+        }
+        that.preventRepeatReuqest = true
+        that.sendPage++
+        await wepy.request({
+          url: 'https://m.tdamm.com/weapp/api/trouble/send_records?token=' + that.token,
+          method: 'POST',
+          data: {
+            page: that.sendPage
+          },
+          header: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then(res => {
+          console.log(res)
+          that.receiveList = [...that.receiveList, ...res.data.records]
+          that.$apply()
+        }).catch(res => {
+          console.log(res)
+        })
+        that.preventRepeatReuqest = false
+        tip.loaded()
+      } else {
+        that.isEmpty = true
+        that.$apply()
+      }
+    }
+    if (that.current == 1) {
+      that.showLoading = true
+      if (that.replyTotal > that.replyPage) {
+        console.log('加载中')
+        //防止重复加载
+        if (that.preventRepeatReuqest) {
+          return true;
+        }
+        that.preventRepeatReuqest = true
+        that.replyPage++
+        tip.loading()
+        await wepy.request({
+          url: 'https://m.tdamm.com/weapp/api/trouble/get_records?token=' + that.token,
+          method: 'POST',
+          data: {
+            page: that.sendPage
+          },
+          header: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then(res => {
+          console.log(res)
+          that.receiveList = [...that.replyList, ...res.data.records]
+          that.$apply()
+        }).catch(res => {
+          console.log(res)
+        })
+        tip.loaded()
+        that.preventRepeatReuqest = false;
+      } else {
+        console.log(that.replyTotal)
+        that.isEmpty2 = true
+      }
+      that.showLoading = false
+    }
+    
   }
 }
 </script>

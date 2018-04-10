@@ -46,6 +46,7 @@
     }
   }
   .proble-items {
+    position: relative;
     width: 100%;
     padding: 40rpx 15rpx;
     box-sizing: border-box;
@@ -101,6 +102,9 @@
         word-wrap: break-word;
         overflow: hidden;
         -webkit-box-pack: center;
+        height: 77rpx;
+        overflow: hidden;
+        line-height: 1.2;
       }
       .info-mes {
         margin-top: 50rpx;
@@ -135,7 +139,7 @@
     <view class="proble-items">
       <block wx:if="{{probleItems.length > 0 }}">
         <view class="proble-item" wx:for="{{probleItems}}">
-          <navigator url="">
+          <navigator url="/pages/pack-detail?id={{item.id}}">
             <view class="item-top">
               <image src="{{item.headimg}}"></image>
               <view>
@@ -148,8 +152,12 @@
               <view class="info-mes">{{item.amount}}元{{item.redpack_num}}份， 剩余{{item.redpack_num - item.grab_num}}份</view>
             </view>
           </navigator> 
-        </view>
+        </view>  
       </block>
+      <!--加载更多时动画-->
+      <bottomLoadMore :showLoading.sync="showLoading" message="正在加载"></bottomLoadMore>
+      <!--暂无数据显示-->
+      <placeholder :isEmpty.sync="isEmpty" message="暂无发现数据"></placeholder>
     </view>
   </view>
 </template>
@@ -159,6 +167,9 @@ import wepy from 'wepy'
 import { checkSettingStatu } from '../util/util'
 import shareMessage from '../mixins/shareMessage'
 import tip from '../util/tip'
+import LoadMore from '../components/loadmore'
+import Placeholder from '../components/placeholder'
+
 export default class Square extends wepy.page {
   config = {
     navigationBarTitleText: '解忧广场',
@@ -166,24 +177,30 @@ export default class Square extends wepy.page {
     backgroundColor: '#d95940'
   }
   mixins = [shareMessage]
+  components = {
+    bottomLoadMore: LoadMore,
+    placeholder: Placeholder
+  }
   data = {
     totalNum: '',
     grabNum: '',
     pvNum: '',
     page: '',
     token: '',
+    total_page: '',
+    showLoading: false,
+    isEmpty: false,
+    preventRepeatReuqest: false,
     probleItems: []
   }
-  onShow () {
-    checkSettingStatu()
-  }
-
   async onLoad () {
-    let that = this
-    that.token = await wepy.getStorageSync('token')
-    let page = 1
-    this.getBaseData()
-    this.getSquareData()
+    
+  }
+  async onShow () {
+    checkSettingStatu()
+    this.isEmpty = false
+    this.token = await wepy.getStorageSync('token')
+    await this.onPullDownRefresh()
   }
   async getBaseData () {
     let that = this 
@@ -194,6 +211,7 @@ export default class Square extends wepy.page {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     }).then(res => {
+      console.log(res)
       that.totalNum = res.data.total_num
       that.grabNum = res.data.grab_num
       that.pvNum = res.data.grab_num
@@ -205,6 +223,7 @@ export default class Square extends wepy.page {
 
   async getSquareData () {
     let that = this
+    that.page = 1
     tip.loading()
     await wepy.request({
       url: 'https://m.tdamm.com/weapp/api/trouble/get_square_data?token=' + this.token,
@@ -217,12 +236,49 @@ export default class Square extends wepy.page {
       }
     }).then(res => {
       console.log(res)
+      that.total_page = res.data.total_page
       that.probleItems = res.data.records
       that.$apply()
     })
     tip.loaded()
   }
   methods = {  
+  }
+  async onPullDownRefresh(){
+    let that = this
+    await that.getBaseData()
+    await that.getSquareData()
+    wx.stopPullDownRefresh()
+  }
+  async onReachBottom() {
+    let that = this
+    if (that.total_page > that.page) {
+      if (that.preventRepeatReuqest) {
+        return
+      }
+      that.preventRepeatReuqest = true
+      that.page++
+      tip.loading()
+      await wepy.request({
+        url: 'https://m.tdamm.com/weapp/api/trouble/get_square_data?token=' + this.token,
+        method: 'POST',
+        data: {
+          page: that.page
+        },
+        header: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(res => {
+        console.log(res)
+        that.total_page = res.data.total_page
+        that.probleItems = [...that.probleItems, ...res.data.records]
+        that.$apply()
+      })
+      tip.loaded()
+    } else {
+      that.isEmpty = true
+    }
+    console.log(that.isEmpty)
   }
 }
 </script>

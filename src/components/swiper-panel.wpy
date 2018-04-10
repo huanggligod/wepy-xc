@@ -1,10 +1,12 @@
 <template>
     <view class="swiper-panel">
         <image class="avatar" src="{{userInfo.avatarUrl}}"></image>
-        <view class="panel-title">{{userInfo.nickName}} 共发出</view>
+        <view class="panel-title" wx:if="{{current==0}}">{{userInfo.nickName}} 共发出</view>
+        <view class="panel-title" wx:if="{{current==1}}">{{userInfo.nickName}} 共解决</view>
         <view class="panel-boxs">
             <view class="box">
-            <text>问题 (个)</text>
+            <text wx:if="{{current==0}}">问题 (个)</text>
+            <text wx:if="{{current==1}}">回复 (个)</text>
             <text class="num">{{num}}</text>
             </view>
             <view class="box">
@@ -28,6 +30,10 @@ export default class ReceivePanel extends wepy.component {
       default: ''
     },
     money: {
+      type: Number,
+      default: ''
+    },
+    current: {
       type: Number,
       default: ''
     }

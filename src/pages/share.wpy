@@ -4,7 +4,9 @@
     <image class="headimg" src="{{headimg}}"></image>
     <view class="tit">发了一个问题<image src="../images/icon-ques.png"></image></view>
     <view class="words">{{word}}</view>
-    <image class="img" src="../images/pack-bg.png"></image>
+    <view>
+      <image class="img" src="../images/pack-bg.png"></image>
+    </view>
     <view class="btns">
       <button type="primary" class="share-btn" open-type="share">转发给好友或群聊</button>
       <button class="save-btn" @tap="saveImg">保存图片</button>
@@ -26,9 +28,19 @@ export default class Share extends wepy.page {
   }
 
   data = {
+    id: '',
+    token: '',
+    codeImg: '../images/code.png',
     headimg: '../images/avator.png',
     word: '啦啦啦啦啦啦啦啦',
     img_url: '../images/square-logo.png'
+  }
+
+  onLoad (options) {
+    this.id = options.id
+    console.log(this.id)
+    this.token = wepy.getStorageSync('token')
+    this.getShareMsg()
   }
 
   methods = {
@@ -80,9 +92,40 @@ export default class Share extends wepy.page {
           })
         }
       })
+    },
+    onShareAppMessage (res) {
+      if (res.form === 'button') {
+        console.log(res)
+      }
+      return {
+        path: '/pages/pack-detail?id=' + this.id,
+        success: function(res) {
+          tip.success('转发成功')
+        },
+        fail: function(res) {
+          tip.confirmT(res.msg)
+        }
+      } 
     }
   }
+
+  async getShareMsg() {
+    let that = this
+    await wepy.request({
+      url: 'https://m.tdamm.com/weapp/api/trouble/share?token=' + that.token,
+      method: 'POST',
+      data: {
+        id: that.id
+      },
+      header: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }).then(res => {
+      console.log(res)
+    })
+  }
 }
+
 </script>
 
 <style lang='less'>

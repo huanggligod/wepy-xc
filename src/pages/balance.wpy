@@ -1,6 +1,6 @@
 <!-- 余额 -->
 <template>
-  <view class="balance-wrap">
+  <form class="balance-wrap" report-submit="true" bindreset="formReset">
     <view class="account">
       <view class="account-top">
         <text>账户余额</text>
@@ -13,15 +13,16 @@
 			<text class="tit">提现金额</text>
 			<view class="balance-section">
 				<text>￥</text>
-				<input type="digit" bindinput="setValue" />
+				<input type="digit" name="balance" bindinput="setValue" />
 			</view>
-			<text class="t">全部提现</text>
-			<button class"cash-btn" @tap="cashOut">提现</button>
+			<!-- <text class="t" >全部提现</text> -->
+			<button class="cash-btn" formType="reset" @tap="formSubmit">提现</button>
+      <text class="fee">提现需支付{{fee}}的服务费</text>
 			<text class="cash-tip">1-3个工作日到账</text>
 		</view>
 		<view class="links"><button plain="true" class="customer" open-type="contact">联系客服</button><text @tap="goTo('/pages/complaints')">投诉</text></view>
 		<view class="faq" @tap="goTo('/pages/sqa')">常见问题</view>
-	</view>
+	</form>
 </template>
 
 <script>
@@ -34,19 +35,35 @@ export default class Balance extends wepy.page {
     navigationBarTitleText: '余额提现'
   }
   data = {
-    Balance: '0.00'
+    Balance: '0.00',
+    token: '',
+    fee: '0.00',
+    amount: ''
   }
-  onShow() {
+  onLoad() {
+    this.token = wepy.getStorageSync('token')
+  }
+  async onShow() {
     checkSettingStatu()
+    this.token = await wepy.getStorageSync('token')
+    await this.getBalance()
   }
   methods = {
     setValue: function(e) {
       let that = this
       let val = parseFloat(e.detail.value)
+      console.log(val)
       let balance = parseFloat(that.Balance)
-      if (val > balance) {
-        return that.Balance
+      if (val > 0) {
+        that.fee = (val * 0.01).toFixed(2)
       }
+      if (val > balance) {
+        that.fee = (that.Balance * 0.01).toFixed(2)
+        return that.Balance
+      } else {
+        that.amount = val
+      }
+      
     },
     goTo(url) {
       if (url.length === 0) {
@@ -56,21 +73,65 @@ export default class Balance extends wepy.page {
         url: url
       })
     },
-    cashOut() {
+    formSubmit: function(e) {
       let that = this
-      let balance = parseFloat(that.Balance)
-      if (balance < 1) {
+      let amount = parseFloat(that.amount)
+      if (amount < 1) {
         tip.confirmT('最少提现1元')
+      } else if ((amount + that.fee) < 1.01) {
+        tip.confirmT('余额不足')
+      } else {
+        wepy.request({
+          url: 'https://m.tdamm.com/weapp/api/trouble/withdraw?token=' + that.token,
+          method: 'POST',
+          data: {
+            amount: amount,
+            fee: that.fee 
+          },
+          header: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then(res => {
+          console.log(res)
+          if (res.data.code == 200) {
+            tip.success('提现成功')
+            that.getBalance()
+          } else {
+            tip.confirmT(res.data.msg)
+          }
+        }).catch(res => {
+          console.log(res)
+        })
       }
     }
   }
+  async getBalance() {
+    let that = this
+    await wepy.request({
+      url: 'https://m.tdamm.com/weapp/api/trouble/get_my_balance?token=' + that.token,
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }).then(res => {
+      console.log(res)
+      if (res.data.code == 200) {
+        that.Balance = res.data.balance
+        that.$apply()
+      }
+    })
+  }
+  
 }
 </script>
 <style lang='less'>
+  page {
+    background: #f6f6f6;
+  }
   .balance-wrap {
     padding: 30rpx;
     box-sizing: border-box;
-    background: #f6f6f6;
+    display: block;
   }
   .account {
     background: #fafafa;
@@ -113,20 +174,23 @@ export default class Balance extends wepy.page {
       background: #1aad19;
       color: #fff;
       margin-top: 46rpx;
+      &.active {
+        color: #1aad19;
+      }
     }
     .cash-tip {
       display: block;
       color: #999999;
-      font-size: 30rpx;
+      font-size: 26rpx;
       text-align: center;
-      margin-top: 44rpx;
+      margin-top: 20rpx;
     }
   }
   .links {
     font-size: 28rpx;
     color: #5d6979;
     text-align: center;
-    margin-top: 40rpx;
+    margin-top: 30rpx;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -150,7 +214,14 @@ export default class Balance extends wepy.page {
     font-size: 28rpx;
     color: #5d6979;
     text-align: center;
-    margin-top: 206rpx;
+    margin-top: 130rpx;
+  }
+  .fee {
+    display: block;
+    margin-top: 40rpx;
+    color: #576b95;
+    font-size: 26rpx;
+    text-align: center;
   }
 
 </style>

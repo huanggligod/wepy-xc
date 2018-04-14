@@ -11,7 +11,11 @@
                 <view class="pack-num">{{item.grab_num}}/{{item.redpack_num}}</view>
             </view>
         </navigator>
-    </repeat>  
+    </repeat>
+    <!-- 暂无数据显示 -->
+    <!-- <view class="empty-placeholder row-center" hidden="{{!isEmpty}}">
+        <view class="txt">亲，没有了哦~</view>
+    </view>     -->
     </view>
     <view wx:else>
         <view class="no-his">还没有记录哦！</view>
@@ -19,21 +23,25 @@
 </template>
 <script>
 import wepy from "wepy";
+import Placeholder from '../components/placeholder'
 
 export default class SwiperList extends wepy.component {
   props = {
     receiveList: {
       type: Object,
       default: []
+    },
+    isEmpty: {
+        type: Boolean,
+        default: false
     }
   }
   data = {
 
   }
   components = {
-    
+    placeholder: Placeholder
   }
-
   onLoad() {}
   computed = {}
 

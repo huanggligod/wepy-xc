@@ -7,6 +7,7 @@
     height: 100%;
     
     .tab-menu {
+      width: 100%;
       display: flex;
       height: 100rpx;
       align-items: center;
@@ -34,37 +35,66 @@
     }
     .swiper-item {
       width: 100%;
-      overflow-y: auto;  
+      overflow-y: auto;
     }
     .lists {
       margin-top: 30rpx;
+    }
+    .empty {
+      position: relative;
+      bottom: -10rpx;
+      margin: 20rpx 0;
+      width: 100%;
+      text-align: center;
+      text {
+        color: #666;
+        font-size: 40rpx;
+        margin-left: 30rpx;
+      }
+    }
+
+    .icon-xl {
+        width: 140rpx;
+        height: 148rpx;
+        display: block;
+        margin: 0 auto;
+    }
+
+    .txt {
+        font-size: 26rpx;
+        color: #888888;
     }
   }
 </style>
 <template>
   <view class="my-history">
-    <view class="tab-menu">
+    <view class="tab-menu" >
       <view class="tab-list + {{current==0?'active':''}}" data-id="0" @tap="getId">我的问题</view>
       <view class="tab-list + {{current==1?'active':''}}" data-id="1" @tap="getId">我的回复</view>
     </view>
     <swiper duration="{{duration}}" current="{{current}}" bindchange="changeCurrent">
       <swiper-item class="swiper-item">
-        <receivePanel :userInfo.sync="userInfo" :current.sync="current" :num.sync="receiveNum" :money.sync="receiveMoney"></receivePanel>
-        <view class="lists">
-          <receiveList :receiveList.sync="receiveList"></receiveList>
-        </view>
-        <!--暂无数据显示-->
-        <placeholder :isEmpty.sync="isEmpty" message="暂无发现数据"></placeholder>        
+        <scroll-view scroll-y style="height: 100%;" @scrolltolower="sendLoadMore">
+          <receivePanel :userInfo.sync="userInfo" :current.sync="current" :num.sync="receiveNum" :money.sync="receiveMoney"></receivePanel>
+          <view class="lists">
+            <receiveList :isEmpty.sync="isEmpty" :receiveList.sync="receiveList"></receiveList>
+          </view>
+          <view class="empty" wx:if="{{isEmpty}}">
+            <view class="txt">亲，没有更多内容啦</view>
+          </view>
+        </scroll-view>
       </swiper-item>
       <swiper-item class="swiper-item">
-        <replyPanel :userInfo.sync="userInfo" :current.sync="current" :num.sync="replyNum" :money.sync="replyMoney"></replyPanel>
-        <view class="lists">
-          <replyList :replyList.sync="replyList"></replyList>
-        </view>
-        <!--暂无数据显示-->
-        <placeholder :isEmpty.sync="isEmpty2" message="暂无发现数据"></placeholder>
+        <scroll-view scroll-y style="height: 100%;" @scrolltolower="replyLoadMore">
+          <replyPanel :userInfo.sync="userInfo" :current.sync="current" :num.sync="replyNum" :money.sync="replyMoney"></replyPanel>
+          <view class="lists">
+            <replyList :replyList.sync="replyList"></replyList>
+          </view>
+          <view class="empty" wx:if="{{isEmpty2}}">
+            <view class="txt">亲，没有更多内容啦</view>
+          </view>
+        </scroll-view>
       </swiper-item> 
-     
     </swiper>
     
   </view>
@@ -109,17 +139,24 @@ export default class MyHistory extends wepy.page {
     replyTotal: '',
     isEmpty: false,
     isEmpty2: false,
+    preventRepeatReuqest: false,
     receiveList: [],
-    replyList: []
+    replyList: [],
+    receiveUrl: 'https://m.tdamm.com/weapp/api/trouble/send_records?token=',
+    repllyUrl: 'https://m.tdamm.com/weapp/api/trouble/get_records?token='
   }
   async onLoad () {
     let that = this
     let userInfo = await wepy.getStorageSync('userInfo')
     that.userInfo = userInfo
-   
+    this.sendPage = 1
+    this.replyPage = 1
+    this.$apply()
   }
   async onShow () {
     checkSettingStatu()
+    this.isEmpty = false
+    this.isEmpty2 = false
     this.token = await wepy.getStorageSync('token')
     await this.onPullDownRefresh()
   }
@@ -142,6 +179,7 @@ export default class MyHistory extends wepy.page {
   }
   async getUserSendList () {
     let that = this
+    that.sendPage = 1
     tip.loading()
     await wepy.request({
       url: 'https://m.tdamm.com/weapp/api/trouble/send_records?token=' + that.token,
@@ -153,7 +191,6 @@ export default class MyHistory extends wepy.page {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     }).then(res => {
-      console.log(res)
       that.sendTotal = res.data.total_page
       that.receiveList = res.data.records
       that.$apply()
@@ -164,6 +201,7 @@ export default class MyHistory extends wepy.page {
   }
   async getUserGetList () {
     let that = this
+    that.replyPage = 1
     tip.loading()
     await wepy.request({
       url: 'https://m.tdamm.com/weapp/api/trouble/get_records?token=' + that.token,
@@ -186,6 +224,7 @@ export default class MyHistory extends wepy.page {
   }
   async getUserGetData () {
     let that = this
+    that.sendPage = 1
     await wepy.request({
       url: 'https://m.tdamm.com/weapp/api/trouble/user_data_for_get?token=' + that.token,
       method: 'POST',
@@ -207,47 +246,40 @@ export default class MyHistory extends wepy.page {
       let that = this
       let cur = e.detail.current
       that.current = cur
+      if (that.current == 1) {
+        that.getUserGetData()
+        that.getUserGetList()
+      }
     },
     getId: function(e) {
       let that = this
       let id = e.currentTarget.dataset.id
       that.current = id
-    }
-  }
-  async onPullDownRefresh(){
-    let that = this
-    that.sendPage = 1
-    that.replyPage = 1
-    await that.getUserSendData()
-    await that.getUserSendList()
-    await that.getUserGetData()
-    await that.getUserGetList()
-    wx.stopPullDownRefresh()
-  }
-  async onReachBottom() {
-    let that = this
-    if (that.current == 0) {
-      if (that.sendTotal > that.sendPage) {
+    },
+    sendLoadMore() {
+      let that = this
+      let total = that.sendTotal
+      let page = that.sendPage + 1
+      if (total >= page) {
         tip.loading()
-        //防止重复加载
+        // 防止重复加载
         if (that.preventRepeatReuqest) {
           return true
         }
         that.preventRepeatReuqest = true
         that.sendPage++
-        await wepy.request({
+        wepy.request({
           url: 'https://m.tdamm.com/weapp/api/trouble/send_records?token=' + that.token,
           method: 'POST',
-          data: {
-            page: that.sendPage
+          data : {
+            page: page
           },
           header: {
             'Content-Type': 'application/x-www-form-urlencoded'
           }
         }).then(res => {
-          console.log(res)
           that.receiveList = [...that.receiveList, ...res.data.records]
-          that.$apply()
+          this.$apply()
         }).catch(res => {
           console.log(res)
         })
@@ -257,43 +289,55 @@ export default class MyHistory extends wepy.page {
         that.isEmpty = true
         that.$apply()
       }
-    }
-    if (that.current == 1) {
-      that.showLoading = true
-      if (that.replyTotal > that.replyPage) {
-        console.log('加载中')
-        //防止重复加载
+    },
+    replyLoadMore() {
+      let that = this
+      let total = that.replyTotal
+      let page = that.replyPage + 1
+      if (total > page) {
+        tip.loading()
+        // 防止重复加载
         if (that.preventRepeatReuqest) {
-          return true;
+          return true
         }
         that.preventRepeatReuqest = true
         that.replyPage++
-        tip.loading()
-        await wepy.request({
+        wepy.request({
           url: 'https://m.tdamm.com/weapp/api/trouble/get_records?token=' + that.token,
           method: 'POST',
-          data: {
-            page: that.sendPage
+          data : {
+            page: page
           },
           header: {
             'Content-Type': 'application/x-www-form-urlencoded'
           }
         }).then(res => {
-          console.log(res)
-          that.receiveList = [...that.replyList, ...res.data.records]
-          that.$apply()
+          that.replyList = [...that.replyList, ...res.data.records]
+          this.$apply()
         }).catch(res => {
           console.log(res)
         })
+        that.preventRepeatReuqest = false
         tip.loaded()
-        that.preventRepeatReuqest = false;
       } else {
-        console.log(that.replyTotal)
         that.isEmpty2 = true
+        that.$apply()
       }
-      that.showLoading = false
     }
-    
   }
+  async onPullDownRefresh(){
+    let that = this
+    if(that.current == 0) {
+      await that.getUserSendData()
+      await that.getUserSendList()
+    }
+    if (that.current == 1) {
+      await that.getUserGetData()
+      await that.getUserGetList()
+    }
+    wx.stopPullDownRefresh()
+  }
+
+  
 }
 </script>

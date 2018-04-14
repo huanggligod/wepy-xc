@@ -51,6 +51,7 @@
     padding: 40rpx 15rpx;
     box-sizing: border-box;
     min-height: 950rpx;
+    overflow-x: hidden;
     &:after {
       content: '';
       display: block;
@@ -62,7 +63,7 @@
       margin: 0 15rpx 30rpx;
     }
     .item-top {
-      background: #ffff;
+      background-color: #ffff;
       display: flex;
       align-items: center;
       border-top-left-radius: 10rpx;
@@ -102,9 +103,9 @@
         word-wrap: break-word;
         overflow: hidden;
         -webkit-box-pack: center;
-        height: 77rpx;
+        height: 76rpx;
         overflow: hidden;
-        line-height: 1.2;
+        line-height: 38rpx;
       }
       .info-mes {
         margin-top: 50rpx;
@@ -143,13 +144,17 @@
             <view class="item-top">
               <image src="{{item.headimg}}"></image>
               <view>
-                <text class="name">来自 {{item.nickName}}</text> 
+                <text class="name">来自 {{item.nickname}}</text> 
                 <text class="time">{{item.time}}</text>
               </view>
             </view>
             <view class="item-info + {{ item.status==2?'':'hui'}}">
               <text class="title">{{item.words}}</text>
-              <view class="info-mes">{{item.amount}}元{{item.redpack_num}}份， 剩余{{item.redpack_num - item.grab_num}}份</view>
+              <view class="info-mes" wx:if="{{item.status==0}}">{{item.amount}}元{{item.redpack_num}}份， 待审核</view>
+              <view class="info-mes" wx:if="{{item.status==1}}">{{item.amount}}元{{item.redpack_num}}份， 审核未通过</view>
+              <view class="info-mes" wx:if="{{item.status==2}}">{{item.amount}}元{{item.redpack_num}}份， 审核通过</view>
+              <view class="info-mes" wx:if="{{item.status==3}}">{{item.amount}}元{{item.redpack_num}}份， 已解决</view>
+              <view class="info-mes" wx:if="{{item.status==4}}">{{item.amount}}元{{item.redpack_num}}份， 已过期</view>
             </view>
           </navigator> 
         </view>  
@@ -157,7 +162,7 @@
       <!--加载更多时动画-->
       <bottomLoadMore :showLoading.sync="showLoading" message="正在加载"></bottomLoadMore>
       <!--暂无数据显示-->
-      <placeholder :isEmpty.sync="isEmpty" message="暂无发现数据"></placeholder>
+      <placeholder :isEmpty.sync="isEmpty" message="亲，没有更多内容啦"></placeholder>
     </view>
   </view>
 </template>
@@ -193,13 +198,12 @@ export default class Square extends wepy.page {
     preventRepeatReuqest: false,
     probleItems: []
   }
-  async onLoad () {
-    
+  onLoad () {
+    this.token = wepy.getStorageSync('token')
   }
   async onShow () {
     checkSettingStatu()
     this.isEmpty = false
-    this.token = await wepy.getStorageSync('token')
     await this.onPullDownRefresh()
   }
   async getBaseData () {
@@ -235,7 +239,6 @@ export default class Square extends wepy.page {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     }).then(res => {
-      console.log(res)
       that.total_page = res.data.total_page
       that.probleItems = res.data.records
       that.$apply()
@@ -252,9 +255,10 @@ export default class Square extends wepy.page {
   }
   async onReachBottom() {
     let that = this
-    if (that.total_page > that.page) {
+    let page = that.page + 1
+    if (that.total_page >= page) {
       if (that.preventRepeatReuqest) {
-        return
+        return true
       }
       that.preventRepeatReuqest = true
       that.page++
@@ -263,22 +267,26 @@ export default class Square extends wepy.page {
         url: 'https://m.tdamm.com/weapp/api/trouble/get_square_data?token=' + this.token,
         method: 'POST',
         data: {
-          page: that.page
+          page: page
         },
         header: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then(res => {
-        console.log(res)
-        that.total_page = res.data.total_page
-        that.probleItems = [...that.probleItems, ...res.data.records]
-        that.$apply()
+        if (res.data.code == 200) {
+          that.probleItems = [...that.probleItems, ...res.data.records]
+          that.$apply()
+        } else {
+          console.log(res)
+        }
+      }).catch(res => {
+        consol.elog(res)
       })
       tip.loaded()
+      that.preventRepeatReuqest = false
     } else {
       that.isEmpty = true
     }
-    console.log(that.isEmpty)
   }
 }
 </script>

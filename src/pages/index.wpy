@@ -22,7 +22,7 @@
     }
   }
   .trable-iput {
-    margin-top: 110rpx;
+    margin-top: 80rpx;
     width: 100%;
     background: #fff;
     padding: 30rpx 22rpx 0;
@@ -79,7 +79,7 @@
     }
 
     .input-box {
-      font-size: 26rpx;
+      font-size: 28rpx;
       padding-left: 4rpx;
       margin-top: 26rpx;
       border-bottom: 1rpx solid #888888;
@@ -112,37 +112,40 @@
     display: flex;
     width: 100%;
     margin: 30rpx 0;
-
+    justify-content: center;
     .label {
       font-size: 26rpx;
       color: #9a9a9a;
       display: flex;
       align-items: center; 
       position: relative;
-      margin: 0 58rpx 0 94rpx;
+      justify-content: center;
+      width: 50%;
       
       .check-icon {
-        width: 24rpx;
-        height: 24rpx;
+        width: 16rpx;
+        height: 12rpx;
         position: absolute;
-        left: 2rpx;
-        top: 4rpx;
+        left: 50%;
+        top: 50%;
         z-index: 9;
         display: none;
+        transform: translate(-50%,-50%);
       }
 
-      &:before {
+      .before {
         content: '';
         display: inline-block;
         width: 24rpx;
         height: 24rpx;
         border: 1px solid #9a9a9a;
-        border-radius: 4px;
+        border-radius: 3px;
         z-index: 2;
         margin-right: 10rpx;
+        position: relative;
       }
       &.has {
-        &:before {
+        .before {
           background: #9a9a9a; 
         }
         .check-icon {
@@ -157,8 +160,7 @@
   }
   .tips-box {
     width: 100%;
-   position: relative;
-    height: 40rpx;
+    position: relative;
     margin-top: 10rpx;
 
     text {
@@ -170,9 +172,6 @@
       background: #d95940;
       color: #fff;
       border-radius: 6rpx;
-      position: absolute;
-      left: 0;
-      top: 0;
       box-sizing: border-box;
       z-index: 3;
     }
@@ -210,7 +209,7 @@
       <view class="trable-iput">
         <text class="iput-tit">请你帮忙</text>
         <view class="section">
-          <textarea class="txt" bindblur="getWords" placeholder="请输入你想得到帮助的问题（如：请问某某市某某区哪里有好吃的串串火锅？" maxlength="-1" placeholder-style="color:#d2d2d2;"></textarea>
+          <textarea class="txt" bindinput="getWords" placeholder="请输入你想得到帮助的问题（如：请问某某市某某区哪里有好吃的串串火锅？）" maxlength="-1" placeholder-style="color:#d2d2d2;"></textarea>
         </view>
       </view>
       <view class="packet-boxs">
@@ -231,7 +230,7 @@
             </label>
           </radio-group>
           <view class="input-box" hidden="{{Hidden==0?false:true}}">
-            <input type="digit" bindinput="getConsumption" placeholder="请输入金额" placeholder-style="font-size:26rpx;"/>
+            <input type="digit" bindinput="getConsumption" placeholder="请输入金额" maxlength="8" placeholder-style="font-size:26rpx;"/>
           </view>
           <image src="../images/icon-money.png"></image>
         </view>
@@ -252,7 +251,7 @@
             </label>
           </radio-group>
           <view class="input-box" hidden="{{Hidden2==0?false:true}}">
-            <input type="number" bindinput="getNum" placeholder="请输入数量" placeholder-style="font-size:26rpx;"/>
+            <input type="number" bindinput="getNum" placeholder="请输入数量" maxlength="5" placeholder-style="font-size:26rpx;"/>
           </view>
           <image class="img2" src="../images/icon-num.png"></image>
         </view>
@@ -262,16 +261,19 @@
         <text class="{{tipShow2?'show':'hide'}}">人数不可低于1人</text>
       </view>
       <view class="section-show" bindchange="showChange">
-        <view class="label + {{showCheckVal?'has':''}}" data-id="{{showCheckVal?'0':'1'}}" @tap="changeVal">匿名
-          <image class="check-icon" src="../images/icon-right.png"></image>
+        <view class="label + {{showCheckVal?'has':''}}" data-id="{{showCheckVal?'0':'1'}}" @tap="changeVal">
+          <view class="before"><image class="check-icon" src="../images/icon-right2.png"></image></view>
+          匿名
+          
           <!-- <checkbox value="" hidden="true"></checkbox> -->
         </view>
-        <view class="label + {{showCheckVal2?'has':''}}" data-id="{{showCheckVal2?'0':'1'}}" @tap="changeVal2">公开至解忧广场
-          <image class="check-icon" src="../images/icon-right.png"></image>
+        <view class="label + {{showCheckVal2?'has':''}}" data-id="{{showCheckVal2?'0':'1'}}" @tap="changeVal2">
+           <view class="before"><image class="check-icon" src="../images/icon-right2.png"></image></view>
+           公开至解忧广场
           <!-- <checkbox value="1" hidden="true"></checkbox> -->
         </view>
       </view>
-      <button class="creat-btn" @tap="generate" formType="reset">生成问题红包</button>
+      <button class="creat-btn" disabled="{{disabled}}" @tap="generate">生成问题红包</button>
       <view class="notic-txt">为了营造良好的网络环境，平台将对所有发出的问题进行人工审核，如发现不良信息，将对其删除处理，影响恶劣的将封号并冻结余额处理，谢谢大家的配合。</view>
     </form>
   </view>
@@ -286,7 +288,6 @@ import shareMessage from '../mixins/shareMessage'
 
 export default class Index extends wepy.page {
   config = {
-    enablePullDownRefresh: true,
     navigationBarTitleText: '请你帮忙'
   }
 
@@ -306,6 +307,7 @@ export default class Index extends wepy.page {
     num: '',
     words: '',
     token: '',
+    disabled: false,
     tipShow1: false,
     tipShow2: false
   }
@@ -319,11 +321,9 @@ export default class Index extends wepy.page {
     let userInfo = await wepy.getStorageSync('userInfo')
     that.userInfo = userInfo
     that.token = await wepy.getStorageSync('token')
-    console.log(that.token)
     // wepy.setStorageSync('userInfo',c.userInfo)
     that.$apply()
   }
-
   async onShow () {
     this.radioChange = ''
     this.radioChange2 = ''
@@ -331,6 +331,7 @@ export default class Index extends wepy.page {
     this.isAnony = ''
     this.words = ''
     checkSettingStatu()
+    this.$apply()
   }
   methods = {
     radioChange: function(e) {
@@ -361,22 +362,17 @@ export default class Index extends wepy.page {
     },
     getConsumption: function(e) {
       let that = this
-      let val = e.detail.value
+      let val = e.detail.value.replace(/\.{2,}/g,".").replace(/^(\-)*(\d+)\.(\d\d).*$/,'$1$2.$3')
       let isShow
       if (val < 1) {
         that.tipShow1 = true
         isShow = true
+      } else {
+        that.tipShow1 = false
+        that.$apply()
       }
-      if (isShow) {
-        setTimeout(() => {
-          that.tipShow1 = false
-          that.$apply()
-        }, 3000)
-      }
-      that.money = val
-    },
-    formReset: function() {
-      console.log('form发生了reset事件')
+      that.money = parseFloat(val).toFixed(2)
+      return val
     },
     getNum: function(e) {
       let that = this
@@ -397,6 +393,7 @@ export default class Index extends wepy.page {
     async generate() {
       let that = this
       console.log(that.money, that.num)
+      let avg_money = parseFloat((that.money / that.num) * 1000 / 1000)
       let data = {
         words: that.words,
         amount: that.money,
@@ -404,10 +401,10 @@ export default class Index extends wepy.page {
         anony: that.isAnony,
         square: that.isSquare
       }
-      if (that.words.length < 20) {
-        tip.confirmT('问题字数不能少于20字')
-      } else if (!that.isAnony && !that.isSquare) {
-        tip.confirmT('请选择发布场景')
+      if (that.money < 1) {
+        tip.confirmT('金额不少于1元')
+      } if (avg_money < 0.01) {
+        tip.confirmT('每个人分到的答谢金不能低于0.01元')
       } else {
         await wepy.request({
           url: 'https://m.tdamm.com/weapp/api/trouble/pay?token=' + that.token,
@@ -417,7 +414,6 @@ export default class Index extends wepy.page {
             'Content-Type': 'application/x-www-form-urlencoded'
           }
         }).then(res => {
-          console.log(res.data.id)
           let dataId = res.data.id
           if (res.data.code == 200) {
             let payInfo = res.data.pay_info
@@ -438,18 +434,15 @@ export default class Index extends wepy.page {
               }
             })
           }else {
-            tip.alert(res.data.msg)
+           tip.alert(res.data.msg)
           }
-          
         }).catch(res => {
           tip.error(res.data.msg)
         })
       }
-      
-      
     }
   }
-  
+
   async onPullDownRefresh () {
     tip.loading()
     await wepy.stopPullDownRefresh()

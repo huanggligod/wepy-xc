@@ -1,12 +1,11 @@
 <template>
     <view wx:if="{{replyList.length > 0}}"> 
     <repeat for="{{replyList}}">
-        <navigator class="reply-list"  url="/pages/pack-detail?id={{item.mt_id}}">
+        <navigator class="reply-list"  url="/pages/pack-detail?id={{item.id}}">
             <image class="item-image" src="{{item.headimg}}"></image>
-            <view class="title" wx:if="{{item.words}}">{{item.words}}</view>
-            <view class="voice" wx:if="{{item.voice_file}}" @tap="play({{item.voice_file}})">
-                <text wx:if="{{!onplay}}">{{item.voice_length}}″</text>
-                <text wx:if="{{onplay}}">{{text}}</text>
+            <view>
+                <view class="title" wx:if="{{item.words}}">{{item.words}}</view>
+                <view class="create-time">{{item.create_time}}</view>
             </view>
             <view class="money">{{item.amount}}元</view>
         </navigator>
@@ -62,7 +61,7 @@ export default class ReplyList extends wepy.component {
             box-sizing: border-box;
             color: #888888;
             border-radius: 10rpx;
-            margin: 20rpx 0 20rpx;
+            margin: 20rpx 0 20rpx 20rpx;
             text {
                 font-size: 26rpx;
                 display: block;
@@ -81,12 +80,18 @@ export default class ReplyList extends wepy.component {
             overflow: hidden;
             -webkit-box-pack: center;
             line-height: 1.5;
+            min-height: 84rpx;
         }
         .money {
             flex: 1;
             text-align: right;
             font-size: 30rpx;
             color: #888888;
+        }
+        .create-time {
+            font-size: 24rpx;
+            margin:10rpx 0 0 30rpx;
+            color: #b2b2b2;;
         }
     }
     .no-his {

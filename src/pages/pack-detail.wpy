@@ -4,25 +4,27 @@
     <view class="red-bg">
         <image class="avatar-image" src="{{avatarImage}}"></image>
         <text class="nickname">{{nickName}}</text>
+        <view class="words {{more?'more':''}}">{{words}}</view>
         <block wx:if="{{statu == 2}}">
-            <view class="words">{{words}}</view>
-            <view wx:if="{{showBtn}}">
-                <view class="btns">
-                    <view class="btn input-btn" @tap="showInput">点击输入</view>
-                    <view class="btn" @touchstart="recordeStart" @touchend="recordeEnd">长按发语音</view>
-                </view>
-            </view>
-            <view wx:else> 
-                <from class="form" bindsubmit="formSubmit">
-                    <input class="input" type="text" bindblur="getContent" placeholder="请输入文字" placeholder-style="font-size:30rpx;" />
-                    <view class="img" @tap="formSubmit">
-                        <image class="icon-send" src="../images/icon-send.png"></image>
-                    </view>
-                    <view class="img" @tap="hideInput">
-                      <image class="icon-voice" src="../images/icon-voice.png"></image>
-                    </view>
-                </from>
-            </view>
+            <block wx:if="{{!hidden}}">
+              <view wx:if="{{showBtn}}">
+                  <view class="btns">
+                      <view class="btn input-btn" @tap="showInput">点击输入</view>
+                      <view class="btn" @longpress="record" @touchend="recordeEnd">长按发语音</view>
+                  </view>
+              </view>
+              <view wx:else> 
+                  <from class="form" bindsubmit="formSubmit">
+                      <input class="input" type="text" bindinput="getContent" placeholder="请输入文字" placeholder-style="font-size:30rpx;" />
+                      <view class="img" @tap="formSubmit">
+                          <image class="icon-send" src="../images/icon-send.png"></image>
+                      </view>
+                      <view class="img" @tap="hideInput">
+                        <image class="icon-voice" src="../images/icon-voice.png"></image>
+                      </view>
+                  </from>
+              </view>
+            </block>
         </block>
         <block wx:elif="{{ statu == 0 }}">
           <view class="unchecked">问题待审核，请稍后领取</view>
@@ -37,15 +39,20 @@
             <view class="isnull">口令已失效</view>
         </block>  
         <view class="links">
-          <view class="link" @tap="goTo('/pages/balance')"><image class="icon-cash" src="../images/icon-cash.png"></image><text>去提现</text></view>
-          <view class="link" @tap="goTo('/pages/index')"><image class="icon-cash" src="../images/icon-write.png"></image><text>我也要玩</text></view>
+          <view class="link" @tap="goTo('/pages/balance')"><image class="icon-cash icon-cash2" src="../images/icon-cash.png"></image><text>去提现</text></view>
+          <view class="link" @tap="goTo('/pages/index')"><image class="icon-cash" src="../images/icon-write.png"></image><text style="font-size: 32rpx;">我也要玩</text></view>
           <view class="link" @tap="navigaTo('share')"><image class="icon-cash" src="../images/icon-zhf.png"></image><text>去转发</text></view>
         </view>
     </view>
-    <view class="pack-mes">
-      <view class="mes-info">共{{amount}}元，已领取{{grabNum}}/{{redpackNum}}个</view>
+    <view class="pack-mes">  
+      <view class="mes-info" wx:if="{{statu == 4}}">共{{amount}}元，已领取{{grabNum}}/{{redpackNum}}个，返还{{refundAmount}}元</view>
+      <view class="mes-info" wx:else>共{{amount}}元，已领取{{grabNum}}/{{redpackNum}}个</view>
       <view class="links">
-        <view class="links"><button plain="true" class="customer" open-type="contact">联系客服</button><text @tap="navigaTo('/pages/complaints')">投诉</text></view>
+        <view class="links">
+          <form report-submit="true" bindsubmit="formSub">
+            <button plain="true" formType="submit" class="customer" open-type="contact">联系客服</button>
+          </form>
+          <text @tap="navigaTo('/pages/complaints')">投诉</text></view>
       </view>
     </view>
     <view class="answer-lists" wx:if="{{answerLists.length > 0}}">
@@ -53,23 +60,48 @@
         <image class="item-img" src="{{item.headimg}}"></image>
         <view class="list-info">
           <view class="name">{{item.nickname}}</view>
-          <view class="answer" wx:if="{{item.words}}">{{item.words}}</view>
-          <view class="voice" wx:if="{{item.voice_file}}" @tap="play({{item.voice_file}})">
-            <text wx:if="{{!onplay}}">{{item.voice_length}}″</text>
-            <text wx:if="{{onplay}}">{{text}}</text>
-          </view>
+          <block wx:if="{{close || (show || item.is_self)}}">
+            <view class="answer" wx:if="{{item.words}}">{{item.words}}</view>
+              <view class="voice" wx:if="{{item.voice_file}}" data-id="{{item.id}}" @tap="play({{item.voice_file}})">
+                <text wx:if="{{!(playId==item.id) || !onplay}}">{{item.voice_length}}″</text>
+                <text wx:if="{{playId==item.id}}">{{text}}</text>
+              </view>
+          </block>
+          <block wx:else>
+            <view class="answer">（回答仅题主可见）</view>
+          </block>
           <view class="tip">
             <text class="time">{{item.create_time}}</text>
-            <block wx:if="{{item.status==0}}">
-              <view class="setion + {{item.id==itemId?'active':''}}" wx:if="{{show}}" data-id="{{item.id}}" @tap="changeSected">
-                <image src="../images/icon-right.png"></image>
-                <text>采纳</text>
-              </view>
+            <block wx:if="{{statu > 2}}">
+              <block wx:if="{{item.status==1}}">
+                <text class="setion red" wx:if="{{show}}">已奉上答谢金</text>
+                <view wx:else class="setion red">赞！已收获答谢金</view>
+              </block>
+              <block wx:else>
+                <view class="setion" style="font-size:20rpx;" wx:if="{{show}}">
+                  哔！好人卡~
+                </view>
+                <view wx:else class="setion" style="font-size:20rpx;">
+                  确认过眼神，但...
+                </view>
+              </block>
             </block>
             <block wx:else>
-              <view class="setion2">
-                <text>已采纳</text>
-              </view>
+              <block wx:if="{{item.status==0}}">
+                <view class="setion + {{item.id==itemId?'active':''}}" wx:if="{{show}}"  data-id="{{item.id}}" @tap="changeSected">
+                  <view class="before"><image src="../images/icon-right2.png"></image></view>
+                  <text class="red">有帮助</text>
+                </view>
+                <view wx:else class="setion" style="font-size:20rpx;">等待题主确认</view>
+              </block>
+              <block wx:else>
+                <view class="setion2 red" wx:if="{{show}}">
+                  已奉上答谢金
+                </view>
+                <view wx:else class="setion2 red">
+                  赞！已收获答谢金
+                </view>
+              </block>
             </block>
           </view>
         </view>
@@ -77,7 +109,10 @@
          <view class="money" wx:else> </view>
       </view>
     </view>
-    <view wx:else class="detail-text">未领取的金额，将于24小时后退至余额</view>
+    <view class="detail-text" wx:else>未领取的金额，将于24小时后退至余额</view>
+    <view class="empty" wx:if="{{isEmpty}}">
+      <view class="txt">亲，没有更多内容啦</view>
+    </view>
   </view>
 </template>
 
@@ -85,6 +120,7 @@
 import wepy from 'wepy'
 import tip from '../util/tip'
 import { dataFormat } from '../util/util'
+import { checkSettingStatu } from '../util/util'
 
 export default class PackDetail extends wepy.page {
   config = {
@@ -95,7 +131,7 @@ export default class PackDetail extends wepy.page {
   data = {
     sected: false,
     showBtn: true,
-    statu: 2,
+    statu: '',
     token: '',
     id: '',
     itemId: '',
@@ -104,25 +140,36 @@ export default class PackDetail extends wepy.page {
     amount: '',
     content: '',
     words:'',
+    hidden: false,
     preventRepeatReuqest: false,
     grabNum: '',
     redpackNum: '',
     avatarImage: '',
+    refundAmount: '',
     nickName: '',
     voiceFile: '',
+    more: '',
     show: false,
     onplay: false,
+    playId: '',
     text: '',
-    answerLists: []
+    total_page: '',
+    close: '',
+    isEmpty: false,
+    isSelf: '',
+    answerLists: [],
+    suid: ''
   }
 
-  async onLoad (options) {
+  onLoad (options) {
     let that = this
     that.id = options.id
+    that.suid = options.suid || ''
     that.uid = wepy.getStorageSync('uid')
-    that.token = wepy.getStorageSync('token')
+    that.token =  wepy.getStorageSync('token')
   }
   async onShow() {
+    checkSettingStatu()
     await this.onPullDownRefresh()
   }
   methods = {
@@ -168,7 +215,56 @@ export default class PackDetail extends wepy.page {
         console.log(res)
       })
     },
-    recordeStart: function() {
+    recordeEnd: function() {
+      let recordeManager = wx.getRecorderManager()
+      recordeManager.stop()
+      recordeManager.onStop((res) => {
+        wx.hideToast()
+       console.log(res)
+        let tempFilePath = res.tempFilePath
+        let length = Math.floor(res.duration/1000)
+        tip.loading()
+        wx.uploadFile({
+          url: 'https://m.tdamm.com/weapp/api/trouble/add_solution?token=' + this.token,
+          filePath: tempFilePath,
+          name: 'voice',
+          formData: {
+            id: this.id,
+            len: length,
+            sUid: this.suid
+          },
+          header: {
+            'content-type': 'multipart/form-data'
+          },
+          success: function(res) {
+            console.log(res)
+            let data = JSON.parse(res.data)
+            if(data.code == 200) {
+              tip.success('提交成功')
+              this.onPullDownRefresh()
+              this.$apply()
+            } else {
+              tip.confirmT(data.msg)
+            }
+            
+          },
+          fail: function(res) {
+            tip.confirmT('网络请求失败')
+          }
+        })
+        tip.loaded()
+      })
+    },
+    record: function() {
+      if (wx.getRecorderManager) {
+        wx.getRecorderManager()
+      } else {
+        // 如果希望用户在最新版本的客户端上体验您的小程序，可以这样子提示
+        wx.showModal({
+          title: '提示',
+          content: '当前微信版本过低，无法使用该功能，请升级到最新微信版本后重试。'
+        })
+      }
       let recordeManager = wx.getRecorderManager()
       const options = {
         duration: 60000,
@@ -187,47 +283,10 @@ export default class PackDetail extends wepy.page {
         })
       })
     },
-    recordeEnd: function() {
-      let recordeManager = wx.getRecorderManager()
-      recordeManager.stop()
-      recordeManager.onStop((res) => {
-        wx.hideToast()
-       console.log(res)
-        let tempFilePath = res.tempFilePath
-        let length = Math.floor(res.duration/1000)
-        tip.loading()
-        wx.uploadFile({
-          url: 'https://m.tdamm.com/weapp/api/trouble/add_solution?token=' + this.token,
-          filePath: tempFilePath,
-          name: 'voice',
-          formData: {
-            id: this.id,
-            len: length
-          },
-          header: {
-            'content-type': 'multipart/form-data'
-          },
-          success: function(res) {
-            console.log(res)
-            let data = JSON.parse(res.data)
-            if(data.code == 200) {
-              tip.success('提交成功')
-              this.onPullDownRefresh()
-            } else {
-              tip.confirmT(data.msg)
-            }
-            
-          },
-          fail: function(res) {
-            tip.confirmT('网络请求失败')
-          }
-        })
-        tip.loaded()
-      })
-    },
     getContent: function(e) {
       let that = this
       that.content = e.detail.value
+      
     },
     formSubmit: function() {
       let that = this
@@ -237,7 +296,8 @@ export default class PackDetail extends wepy.page {
           method: 'POST',
           data: {
             id: that.id,
-            content: that.content
+            content: that.content,
+            sUid: that.suid
           },
           header: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -257,8 +317,37 @@ export default class PackDetail extends wepy.page {
         tip.confirmT('回答不能为空')
       }
     },
+    // 收集formid
+    formSub: function(e) {
+      let formid = e.detail.formId
+      console.log(formid)
+      wepy.request({
+        url: 'https://m.tdamm.com/weapp/api/trouble/save_temp_id?token=' + this.token,
+        method: 'POST',
+        data: {
+          formId: formid
+        },
+        header: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(res => {
+        console.log(res)
+      }).catch(res => {
+        console.log(res)
+      })
+    },
     // 播放录音
-    play(filepath) {
+    play(filepath, e) {
+      if (wx.createInnerAudioContext) {
+        wx.createInnerAudioContext()
+      } else {
+        // 如果希望用户在最新版本的客户端上体验您的小程序，可以这样子提示
+        wx.showModal({
+          title: '提示',
+          content: '当前微信版本过低，无法使用该功能，请升级到最新微信版本后重试。'
+        })
+      }
+      this.playId = e.currentTarget.dataset.id
       const innerAudioContext = wx.createInnerAudioContext()
       innerAudioContext.src = filepath
       if (!this.onplay) {
@@ -275,6 +364,7 @@ export default class PackDetail extends wepy.page {
         innerAudioContext.onEnded(() => {
           console.log('播放结束')
           this.onplay = false
+          this.playId = ''
           this.$apply()
         })
       } else {
@@ -307,9 +397,16 @@ export default class PackDetail extends wepy.page {
         that.redpackNum = res.data.data.redpack_num
         that.words = res.data.data.words
         that.statu = res.data.data.status
+        that.refundAmount = res.data.data.refund_amount
         that.avatarImage = res.data.data.headimg
+        if (res.data.data.words.length > 14) {
+          that.more = true
+        }
         if (that.uid == res.data.data.uid) {
           that.show = true
+          that.hidden = true
+        } else if (that.statu > 2) {
+          that.close = true
         }
         that.$apply()
       }
@@ -334,33 +431,34 @@ export default class PackDetail extends wepy.page {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     }).then(res => {
-      
       that.answerLists = res.data.records
+      that.total_page = res.data.total_page
       that.$apply()
     }).catch(res => {
       console.log(res)
     })
     tip.loaded()
-
   }
   async onPullDownRefresh(){
     await this.getBaseData()
     await this.getSolution()
     wx.stopPullDownRefresh()
   }
-  async onReachBottom() {
+  onReachBottom() {
     let that = this
+    tip.loading()
     if (that.total_page > that.page) {
       if (that.preventRepeatReuqest) {
-        return
+        return true
       }
       that.preventRepeatReuqest = true
       that.page++
       tip.loading()
-      await wepy.request({
-        url: 'https://m.tdamm.com/weapp/api/trouble/get_square_data?token=' + this.token,
+      wepy.request({
+        url: 'https://m.tdamm.com/weapp/api/trouble/get_solutions?token=' + this.token,
         method: 'POST',
         data: {
+          id: that.id,
           page: that.page
         },
         header: {
@@ -368,18 +466,24 @@ export default class PackDetail extends wepy.page {
         }
       }).then(res => {
         console.log(res)
-        that.total_page = res.data.total_page
-        that.probleItems = [...that.probleItems, ...res.data.records]
+        that.answerLists = [...that.answerLists, ...res.data.records]
         that.$apply()
+      }).catch(res => {
+        console.log(res)
       })
-      tip.loaded()
-    } else {
-      tip.alert('没有更多')
     }
+    tip.loaded()
+    that.isEmpty = true
   }
 }
 </script>
 <style lang='less'>
+  page {
+    height: 100%;
+  }
+  .pack-detail {
+    height: 100%;
+  }
   .red-bg {
       background: #d95940;
       padding: 30rpx 30rpx 20rpx;
@@ -400,15 +504,23 @@ export default class PackDetail extends wepy.page {
       }
       .words {
           margin-top: 30rpx;
-          font-size: 30rpx;
+          margin-bottom: 50rpx;
+          font-size: 48rpx;
           color: #fff;
           line-height: 1.5;
+          text-align: center;
+
+          &.more {
+            text-align: left;
+            font-size: 36rpx;
+            letter-spacing: 1rpx;
+          }
       }
       
       .btns {
           display: flex;
           justify-content: space-around;
-          margin: 50rpx 0;
+          margin: 0 0 50rpx 0;
           .btn  {
               width: 300rpx;
               height: 60rpx;
@@ -466,8 +578,12 @@ export default class PackDetail extends wepy.page {
           height: 25rpx;
           vertical-align: middle;
         }
+        .icon-cash2 {
+          width: 28rpx;
+          height: 28rpx;
+        }
         text {
-          font-size: 30rpx;
+          font-size: 28rpx;
           color: #ffffff;
           margin-left: 13rpx;
         }
@@ -501,14 +617,14 @@ export default class PackDetail extends wepy.page {
           color: #9b9b9b;
       }
       .links {
-          font-size: 28rpx;
-          color: #5d6979;
-          text-align: center;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+        font-size: 28rpx;
+        color: #5d6979;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
-          .customer {
+        .customer {
           width: 150rpx;
           border: none;
           padding-left: 0;
@@ -517,19 +633,20 @@ export default class PackDetail extends wepy.page {
           font-size: 28rpx;
           margin-left: 0;
           margin-right: 0;
-          line-height: 1;
-          }
-          text {
+          line-height: 1.2;
+        }
+        text {
           margin: 0 15rpx;
-          }
+          font-size: 28rpx;
+        }
       }
   }
   .answer-lists {
-    padding: 0 30rpx;
+    padding: 0 30rpx 40rpx;
 
     .item {
       padding: 25rpx 20rpx;
-      border-bottom: 2rpx solid #9b9b9b;
+      border-bottom: 1rpx solid #9b9b9b;
       display: flex;
       justify-content: space-between;
     }
@@ -547,7 +664,7 @@ export default class PackDetail extends wepy.page {
         font-size: 24rpx;
       }
       .answer {
-        margin: 24rpx 0;
+        margin: 20rpx 0;
         line-height: 1.5;
       }
       .voice {
@@ -557,7 +674,7 @@ export default class PackDetail extends wepy.page {
         box-sizing: border-box;
         color: #888888;
         border-radius: 10rpx;
-        margin: 20rpx 0;
+        margin: 14rpx 0;
         text {
           font-size: 26rpx;
           display: block;
@@ -566,31 +683,36 @@ export default class PackDetail extends wepy.page {
       }
       .tip {
         display: flex;
-        // align-items: center;
+        align-items: flex-end;
+        height: 20rpx;
+        line-height: 20rpx;
+        font-size: 22rpx;
         .setion {
           margin-left: 32rpx;
-          margin-top: -4rpx;
-          position: relative;
           display: flex;
           align-items: center;
-          &:before {
+          .before {
             content: '';
             display: inline-block;
             width: 22rpx;
             height: 22rpx;
             border: 1rpx solid #d95940;
             margin-right: 9rpx;
+            position: relative;
+            image{
+              width: 16rpx;
+              height: 12rpx;
+              position: absolute;
+              left: 50%;
+              top: 50%;
+              display: none;
+              margin-top: -6rpx;
+              margin-left: -8rpx;
+            }
           }
-          image{
-            width: 22rpx;
-            height: 22rpx;
-            position: absolute;
-            left: 2rpx;
-            top: 14rpx;
-            display: none;
-          }
+          
           &.active {
-            &:before {
+            .before {
               background: #d95940;
             }
             image {
@@ -616,5 +738,28 @@ export default class PackDetail extends wepy.page {
     color: #888888;
     text-align: center;
     margin: 30rpx 0;
+  }
+  .empty {
+    position: relative;
+    bottom: 10rpx;
+    margin: 20rpx 0;
+    width: 100%;
+    text-align: center;
+    .txt {
+      font-size: 26rpx;
+      color: #888888;
+    }
+  }
+
+  .icon-xl {
+      width: 140rpx;
+      height: 148rpx;
+      display: block;
+      margin: 0 auto;
+  }
+
+  .red {
+    color: #d95940;
+    font-size: 20rpx;
   }
 </style>

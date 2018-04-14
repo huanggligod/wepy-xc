@@ -2,12 +2,14 @@
 <template>
   <view class="share-wrap">
     <image class="headimg" src="{{headimg}}"></image>
-    <view class="tit">发了一个问题<image src="../images/icon-ques.png"></image></view>
+    <view class="tit"><text>发了一个问题</text><image src="../images/icon-ques.png"></image></view>
     <view class="words">{{word}}</view>
-    <view>
+    <view @tap="previewImg">
       <image class="img" src="../images/pack-bg.png"></image>
     </view>
+
     <view class="btns">
+      <view class="txt" wx:if="{{!checked}}">问题审核中，审核通过才能被领取，建议审核通过再转发；稍后可在首页【我的记录】中找回该问题，审核通过会有信息推送。</view>
       <button type="primary" class="share-btn" open-type="share">转发给好友或群聊</button>
       <button class="save-btn" @tap="saveImg">保存图片</button>
       <view class="toindex" @tap="goTo('/pages/index')">我也试一试</view>
@@ -19,6 +21,7 @@
 <script>
 import wepy from 'wepy'
 import tip from '../util/tip'
+import {getCurrentTime, checkSettingStatu} from '../util/util'
 
 export default class Share extends wepy.page {
   config = {
@@ -31,18 +34,20 @@ export default class Share extends wepy.page {
     id: '',
     token: '',
     codeImg: '../images/code.png',
-    headimg: '../images/avator.png',
-    word: '啦啦啦啦啦啦啦啦',
-    img_url: '../images/square-logo.png'
+    headimg: '',
+    word: '',
+    img_url: '',
+    checked: 1
   }
 
-  onLoad (options) {
+  async onLoad (options) {
     this.id = options.id
-    console.log(this.id)
     this.token = wepy.getStorageSync('token')
-    this.getShareMsg()
+    await this.getShareMsg()
   }
-
+  onShow () {
+    checkSettingStatu()
+  }
   methods = {
     goTo: function(url) {
       wx.switchTab({
@@ -51,10 +56,12 @@ export default class Share extends wepy.page {
     },
     saveImg:function() {
       let that = this
-      wx.getImageInfo({
-        src: '',
+      console.log(that.img_url)
+      wx.downloadFile({
+        url: that.img_url,
         success: function (res) {
-         let path = res.path
+         let path = res.tempFilePath
+         console.log(path)
           wx.getSetting({
             success(res) {
               if (!res.authSetting['scope.writePhotosAlbum']) {
@@ -106,11 +113,18 @@ export default class Share extends wepy.page {
           tip.confirmT(res.msg)
         }
       } 
+    },
+    previewImg: function() {
+      wx.previewImage({
+        current: '', // 当前显示图片的http链接
+        urls: [this.img_url] // 需要预览的图片http链接列表
+      })
     }
   }
 
   async getShareMsg() {
     let that = this
+    tip.loading()
     await wepy.request({
       url: 'https://m.tdamm.com/weapp/api/trouble/share?token=' + that.token,
       method: 'POST',
@@ -121,8 +135,14 @@ export default class Share extends wepy.page {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     }).then(res => {
-      console.log(res)
+      that.word = res.data.words
+      that.headimg = res.data.headimg
+      that.checked = res.data.checked
+      that.img_url = res.data.share_img + '?t=' + getCurrentTime()
+      console.log(that.checked)
+      that.$apply()
     })
+    tip.loaded()
   }
 }
 
@@ -143,20 +163,21 @@ export default class Share extends wepy.page {
       height: 90rpx;
       border-radius: 6rpx;
       margin: 0 auto 0;
-      padding-top: 20rpx;
+      margin-top: 20rpx;
     }
     .tit {
-      display: block;
+      display: flex;
       color: #ffe7b3;
       font-size: 30rpx;
       text-align: center;
       margin: 16rpx 0 34rpx;
+      justify-content: center;
+      line-height: 36rpx;
 
       image {
         width: 29rpx;
-        height: 35rpx;
-        vertical-align: middle;
-        margin-left: 10rpx;
+        height: 36rpx;
+        margin-left: 16rpx;
       }
     }
     .words {
@@ -165,12 +186,19 @@ export default class Share extends wepy.page {
       color: #ffe7b3;
       margin: 0 auto;
       text-align: center;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      word-wrap: break-word;
+      overflow: hidden;
+      -webkit-box-pack: center;
+
     }
     .img {
       width: 750rpx;
       height: 250rpx;
       display: block;
-      margin-top: 75rpx;
+      margin-top: 25rpx;
     }
 
     .btns {
@@ -178,9 +206,16 @@ export default class Share extends wepy.page {
       margin: 70rpx auto 0;
       background: #fff;
       border-radius: 10rpx;
-      padding: 35rpx 30rpx;
+      padding: 25rpx 30rpx;
       box-sizing: border-box;
-
+      .txt {
+        font-size: 26rpx;
+        color: #d95940;
+        padding: 15rpx;
+        border: 1rpx dashed #d95940;
+        margin-bottom: 20rpx;
+        border-radius: 10rpx;
+      }
       .save-btn {
         margin-top: 25rpx;
       }
@@ -188,7 +223,7 @@ export default class Share extends wepy.page {
     .toindex {
       font-size: 26rpx;
       color: #5d5d5d;
-      margin: 30rpx 0;
+      margin: 20rpx 0;
       text-align: center;
     }
     .sqa {

@@ -58,16 +58,16 @@
       </view>
     </block>
     <view class="complaint-title">请填写您的手机号，方便我们联系您</view>
-    <form class="mes">
+    <form class="mes" bindsubmit="formSub">
       <view class="setion">
         <label>手机号</label>
-        <input type="number" placeholder="选填" placeholder-style="font-size: 28rpx;">
+        <input name="phone" type="number" placeholder="选填" placeholder-style="font-size: 28rpx;">
       </view>
       <view class="setion">
         <label>微信号</label>
-        <input type="text" placeholder="选填" placeholder-style="font-size: 28rpx;">
+        <input type="text" name="wx" placeholder="选填" placeholder-style="font-size: 28rpx;">
       </view>
-      <button class="confirm-btn" type="primary">确认投诉</button>
+      <button class="confirm-btn" formType="submit" type="primary">确认投诉</button>
     </form>
   </view>
   
@@ -85,6 +85,7 @@ export default class Complaints extends wepy.page {
 
   data = {
     id: -1,
+    token: '',
     lists: [
       {title: '欺诈', id: '0'},
       {title: '色情', id: '1'},
@@ -94,13 +95,34 @@ export default class Complaints extends wepy.page {
       {title: '隐私信息收集',id: '5'}
     ]
   }
-
+  onLoad() {
+    this.token = wepy.getStorageSync('token')
+  }
   methods = {
     getId: function(e) {
       let that = this
       let id = e.currentTarget.dataset.id
       that.id = id
+    },
+    formSub: function(e) {
+      let that = this
+      console.log(e)
+      let data = e.detail.value
+      wepy.request({
+        url: 'https://m.tdamm.com/weapp/api/trouble/add_suggest?token=' + this.token,
+        method: 'POST',
+        data: data,
+        header: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(res => {
+        console.log(res)
+        tip.success('提交成功')
+      }).catch(res => {
+        console.log(res)
+      })
     }
   }
+  
 }
 </script>

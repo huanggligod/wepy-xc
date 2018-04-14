@@ -98,10 +98,10 @@ page {
                 <view class="list-txt" wx:if="{{item.toggle}}">{{item.txt}}</view>
             </view>
         </vie>
-        <form class="advice" report-submit="true" bindsubmit="formSub">
+        <form class="advice" report-submit="true" bindsubmit="formReset">
           <view class="title">您的宝贵意见或者建议</view>
           <textarea name="textarea" auto-height="true" type="text"  bindblur="changeDis" placeholder="您可以在这里输入您的意见或建议" placeholder-style="font-size:26rpx;" />
-          <button class="btn + {{!disabled?'active':''}}"  disabled="{{disabled}}" formType="submit">提交</button>
+          <button class="btn + {{!disabled?'active':''}}"  disabled="{{disabled}}" @tap="formSub" formType="reset">提交</button>
         </form>
         <button class="customer" open-type="contact">联系在线客服</button>
     </view>
@@ -114,11 +114,12 @@ import tip from '../util/tip'
 export default class Sqa extends wepy.page {
   config = {
     navigationBarTitleText: '常见问题',
-    enablePullDownRefresh: true,
     backgroundColor: '#f6f6f6'
   }
   data = {
     disabled: true,
+    content: '',
+    token: '',
     lists: [
       { title: '“请你帮忙”怎么玩？', 
         txt: '“请你帮忙”是一款基于微信群组、朋友圈的强大传播性和及时性衍生而出的社交类帮忙工具。你可以：【发出请求，获取帮助，解决问题】 【提供帮助，解答或分享，获得答谢金】', 
@@ -179,31 +180,31 @@ export default class Sqa extends wepy.page {
     },
     changeDis: function(e) {
       let that = this
+      that.content = e.detail.value
       if (e.detail.value.length > 0) {
         that.disabled = false
       } 
     }
   }
-  formSub(e) {
+  async formSub(e) {
     let that = this
-    let form_id = e.detail.formId
-    console.log(e)
-    console.log(form_id)
-    wepy.request({
-      url: 'https://m.tdamm.com/weapp/api/trouble/save_temp_id?token=' + this.token,
+    await wepy.request({
+      url: 'https://m.tdamm.com/weapp/api/trouble/add_suggest?token=' + that.token,
       method: 'POST',
       data: {
-        formId: form_id
+        content: that.content
+      },
+      header: {
+        'Content-Type': 'application/x-www-form-urlencoded'
       }
     }).then(res => {
-      console.log(res)
       if (res.data.code == 200) {
         tip.success('提交成功')
       } else {
-        tip.confirm(res.data.msg)
+        tip.confirmT(res.data.msg)
       }
     }).catch(res => {
-      console.log(res)
+      cosnole.log(res)
     })
   }
 }

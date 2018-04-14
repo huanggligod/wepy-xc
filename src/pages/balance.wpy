@@ -7,7 +7,7 @@
         <text style="font-size:48rpx; margin-left:48rpx;">{{Balance}}</text>
         元
       </view>
-      <view class="account-txt">提现到微信零钱</view>
+      <view class="account-txt">提现金额不低于1元</view>
     </view>
 		<view class="withdrawal-box">
 			<text class="tit">提现金额</text>
@@ -20,7 +20,11 @@
       <text class="fee">提现需支付{{fee}}的服务费</text>
 			<text class="cash-tip">1-3个工作日到账</text>
 		</view>
-		<view class="links"><button plain="true" class="customer" open-type="contact">联系客服</button><text @tap="goTo('/pages/complaints')">投诉</text></view>
+		<view class="links">
+      <form report-submit="true" bindsubmit="formSub">
+        <button plain="true" formType="submit" class="customer" open-type="contact">联系客服</button>
+      </form>
+      <text @tap="goTo('/pages/complaints')">投诉</text></view>
 		<view class="faq" @tap="goTo('/pages/sqa')">常见问题</view>
 	</form>
 </template>
@@ -92,7 +96,6 @@ export default class Balance extends wepy.page {
             'Content-Type': 'application/x-www-form-urlencoded'
           }
         }).then(res => {
-          console.log(res)
           if (res.data.code == 200) {
             tip.success('提现成功')
             that.getBalance()
@@ -103,6 +106,24 @@ export default class Balance extends wepy.page {
           console.log(res)
         })
       }
+    },
+    formSub: function(e) {
+      let formid = e.detail.formId
+      console.log(formid)
+      wepy.request({
+        url: 'https://m.tdamm.com/weapp/api/trouble/save_temp_id?token=' + this.token,
+        method: 'POST',
+        data: {
+          formId: formid
+        },
+        header: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(res => {
+        console.log(res)
+      }).catch(res => {
+        console.log(res)
+      })
     }
   }
   async getBalance() {
@@ -129,13 +150,13 @@ export default class Balance extends wepy.page {
     background: #f6f6f6;
   }
   .balance-wrap {
-    padding: 30rpx;
+    padding: 26rpx;
     box-sizing: border-box;
     display: block;
   }
   .account {
     background: #fafafa;
-    padding: 40rpx 42rpx;
+    padding: 30rpx 42rpx;
     .account-top {
       font-size: 30rpx;
       color: #999999;
@@ -148,7 +169,7 @@ export default class Balance extends wepy.page {
   }
   .withdrawal-box {
     background: #ffffff;
-    padding: 30rpx 40rpx;
+    padding: 26rpx 40rpx;
     .tit {
       font-size: 36rpx;
       color: #5e5e5e;
@@ -173,7 +194,7 @@ export default class Balance extends wepy.page {
     .cash-btn {
       background: #1aad19;
       color: #fff;
-      margin-top: 46rpx;
+      margin-top: 30rpx;
       &.active {
         color: #1aad19;
       }
@@ -214,11 +235,11 @@ export default class Balance extends wepy.page {
     font-size: 28rpx;
     color: #5d6979;
     text-align: center;
-    margin-top: 130rpx;
+    margin-top: 240rpx;
   }
   .fee {
     display: block;
-    margin-top: 40rpx;
+    margin-top: 25rpx;
     color: #576b95;
     font-size: 26rpx;
     text-align: center;

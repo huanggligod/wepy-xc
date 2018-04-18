@@ -5,12 +5,17 @@
         <image class="avatar-image" src="{{avatarImage}}"></image>
         <text class="nickname">{{nickName}}</text>
         <view class="words {{more?'more':''}}">{{words}}</view>
-        <block wx:if="{{statu == 2}}">
+        <block wx:if="{{login}}">
+          <block wx:if="{{statu == 2}}">
             <block wx:if="{{!hidden}}">
               <view wx:if="{{showBtn}}">
                   <view class="btns">
-                      <view class="btn input-btn" @tap="showInput">点击输入</view>
-                      <view class="btn" @longpress="record" @touchend="recordeEnd">长按发语音</view>
+                    <form report-submit="true" bindsubmit="getFormId">
+                      <button class="btn input-btn" @tap="showInput" formType="submit">点击输入</button>
+                    </form>
+                    <form report-submit="true" bindsubmit="getFormId">
+                      <button class="btn" formType="submit" @longpress="record" @touchend="recordeEnd">长按发语音</button>
+                    </form>
                   </view>
               </view>
               <view wx:else> 
@@ -25,19 +30,21 @@
                   </from>
               </view>
             </block>
+          </block>
+          <block wx:elif="{{ statu == 0 }}">
+            <view class="unchecked">问题待审核，请稍后领取</view>
+          </block>
+          <block wx:elif="{{statu == 3}}">
+              <view class="isnull">答谢金被抢光了</view>
+          </block>
+          <block wx:elif="{{statu == 1}}">
+              <view class="isnull">审核未通过</view>
+          </block>
+          <block wx:else="{{statu == 4}}">
+              <view class="isnull">口令已失效</view>
+          </block>  
         </block>
-        <block wx:elif="{{ statu == 0 }}">
-          <view class="unchecked">问题待审核，请稍后领取</view>
-        </block>
-        <block wx:elif="{{statu == 3}}">
-            <view class="isnull">答谢金被抢光了</view>
-        </block>
-        <block wx:elif="{{statu == 1}}">
-            <view class="isnull">审核未通过</view>
-        </block>
-        <block wx:else="{{statu == 4}}">
-            <view class="isnull">口令已失效</view>
-        </block>  
+        
         <view class="links">
           <view class="link" @tap="goTo('/pages/balance')"><image class="icon-cash icon-cash2" src="../images/icon-cash.png"></image><text>去提现</text></view>
           <view class="link" @tap="goTo('/pages/index')"><image class="icon-cash" src="../images/icon-write.png"></image><text style="font-size: 32rpx;">我也要玩</text></view>
@@ -61,11 +68,11 @@
         <view class="list-info">
           <view class="name">{{item.nickname}}</view>
           <block wx:if="{{close || (show || item.is_self)}}">
-            <view class="answer" wx:if="{{item.words}}">{{item.words}}</view>
-              <view class="voice" wx:if="{{item.voice_file}}" data-id="{{item.id}}" @tap="play({{item.voice_file}})">
-                <text wx:if="{{!(playId==item.id) || !onplay}}">{{item.voice_length}}″</text>
-                <text wx:if="{{playId==item.id}}">{{text}}</text>
-              </view>
+            <view class="voice" wx:if="{{item.voice_file}}" data-id="{{item.id}}" @tap="play({{item.voice_file}})">
+              <text wx:if="{{!(playId==item.id) || !onplay}}">{{item.voice_length}}″</text>
+              <text wx:if="{{playId==item.id}}">{{text}}</text>
+            </view>
+            <view class="answer" wx:else>{{item.words}}</view>
           </block>
           <block wx:else>
             <view class="answer">（回答仅题主可见）</view>
@@ -158,24 +165,57 @@ export default class PackDetail extends wepy.page {
     isEmpty: false,
     isSelf: '',
     answerLists: [],
+    login: false,
     suid: ''
   }
 
-  onLoad (options) {
+  async onLoad (options) {
     let that = this
     that.id = options.id
     that.suid = options.suid || ''
-    that.uid = wepy.getStorageSync('uid')
-    that.token =  wepy.getStorageSync('token')
+    // await this.$parent.checkLoginState()
+    // that.suid = options.suid || ''
+    // that.uid = wepy.getStorageSync('uid')
+    // that.token =  wepy.getStorageSync('token')
+    // console.log(that.token)
+    // if (that.token) {
+    //   that.login = true
+    // }
+    await this.onPullDownRefresh()
+    that.$apply()
   }
   async onShow() {
-    checkSettingStatu()
-    await this.onPullDownRefresh()
+    await this.$parent.checkLoginState()
+    this.uid = await wepy.getStorageSync('uid')
+    this.token = await  wepy.getStorageSync('token')
+    if (this.token) {
+      this.login = true
+    }
+    this.onPullDownRefresh()
+    this.$apply()
   }
   methods = {
     showInput: function() {
       let that = this
       that.showBtn = false
+    },
+    getFormId: function(e) {
+      let formid = e.detail.formId
+      console.log(formid)
+      wepy.request({
+        url: 'https://m.tdamm.com/weapp/api/trouble/save_temp_id?token=' + this.token,
+        method: 'POST',
+        data: {
+          formId: formid
+        },
+        header: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(res => {
+        console.log(res)
+      }).catch(res => {
+        console.log(res)
+      })
     },
     hideInput: function() {
       let that = this
@@ -220,7 +260,6 @@ export default class PackDetail extends wepy.page {
       recordeManager.stop()
       recordeManager.onStop((res) => {
         wx.hideToast()
-       console.log(res)
         let tempFilePath = res.tempFilePath
         let length = Math.floor(res.duration/1000)
         tip.loading()
@@ -237,7 +276,6 @@ export default class PackDetail extends wepy.page {
             'content-type': 'multipart/form-data'
           },
           success: function(res) {
-            console.log(res)
             let data = JSON.parse(res.data)
             if(data.code == 200) {
               tip.success('提交成功')
@@ -303,7 +341,6 @@ export default class PackDetail extends wepy.page {
             'Content-Type': 'application/x-www-form-urlencoded'
           }
         }).then(res => {
-          console.log(res)
           if (res.data.code == 200) {
             this.onPullDownRefresh()
           } else {
@@ -320,7 +357,6 @@ export default class PackDetail extends wepy.page {
     // 收集formid
     formSub: function(e) {
       let formid = e.detail.formId
-      console.log(formid)
       wepy.request({
         url: 'https://m.tdamm.com/weapp/api/trouble/save_temp_id?token=' + this.token,
         method: 'POST',
@@ -552,16 +588,16 @@ export default class PackDetail extends wepy.page {
           width: 60rpx;
           background: #fff;
           border-radius: 10rpx; 
-          text-align: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           .icon-send {
               width: 43rpx;
               height: 44rpx;
-              vertical-align: middle;
           }
           .icon-voice {
               width:34rpx;
               height: 46rpx;
-              vertical-align: middle;
           }
       }
       .links {
@@ -666,6 +702,7 @@ export default class PackDetail extends wepy.page {
       .answer {
         margin: 20rpx 0;
         line-height: 1.5;
+        min-height: 40rpx;
       }
       .voice {
         width: 362rpx;

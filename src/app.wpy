@@ -13,7 +13,7 @@
 <script>
 import wepy from 'wepy'
 import 'wepy-async-function'
-import { dataFormat } from './util/util'
+import { isEmptyObject, dataFormat, checkSettingStatu } from './util/util'
 import tip from './util/tip'
 
 export default class extends wepy.app {
@@ -100,18 +100,26 @@ export default class extends wepy.app {
     if (!wxLoginState || !token) {
       let that = this
       let resp = await wepy.login()
+      let encryptedData
+      let iv
       if (resp.code) {
-        let c = await wepy.getUserInfo()
-        that.globalData.userInfo = c.userInfo
-        wepy.setStorageSync('userInfo', c.userInfo)
+        await wepy.getUserInfo({withCredentials: true}).then(res => {
+          encryptedData = res.encryptedData
+          iv = res.iv
+          that.globalData.userInfo = res.userInfo
+          wepy.setStorageSync('userInfo', res.userInfo)
+        }).catch(res => {
+          console.log(res)
+          that.checkSettingStatu()
+        })
         tip.loading()
         await wepy.request({
           url: 'https://m.tdamm.com/weapp/member/login',
           method: 'POST',
           data: {
             code: resp.code,
-            encryptedData: c.encryptedData,
-            iv: c.iv,
+            encryptedData: encryptedData,
+            iv: iv,
             type: 'trouble' 
           },
           header: {
@@ -119,14 +127,12 @@ export default class extends wepy.app {
           }
         })
         .then(res => {
-          console.log(res.data)
           if (res.data.code == 200) {
             if (res.data.token) {
               let token = encodeURIComponent(res.data.token)
               let uid = res.data.uid
               wepy.setStorageSync('token', token)
               wepy.setStorageSync('uid', uid)
-              console.log(uid)
             }
           } else {
             tip.alert('登录失败')
@@ -140,7 +146,6 @@ export default class extends wepy.app {
     } else {
       return false
     }
-    
   }
   async checkLoginState() {
     // 微信自己的code 状态
@@ -151,6 +156,33 @@ export default class extends wepy.app {
     } else {
       return false
     }
+  }
+  async checkSettingStatu() {
+    let that = this
+    // 判断是否是第一次授权，非第一次授权且授权失败则进行提醒
+    await wepy.getSetting().then(res =>{
+      let authSetting = res.authSetting
+      if(isEmptyObject(authSetting)) {
+        that.login()
+      } else {
+        if (authSetting['scope.userInfo'] === false) {
+          wepy.showModal({
+            title: '用户未授权',
+            content: '如需正常使用该功能，请按确定并在授权管理中选中“用户信息”，然后点按确定。最后再重新进入小程序即可正常使用。',
+            showCancel: false
+          }).then(res => {
+            if (res.confirm) {
+              wepy.openSetting().then(res => {
+                if (res.authSetting['scope.userInfo']) {
+                  that.login()
+                }
+              })
+            }
+          })
+          
+        }
+      }
+    })
   }
 }
 </script>

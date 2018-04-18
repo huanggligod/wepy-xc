@@ -294,7 +294,7 @@ export default class MyHistory extends wepy.page {
       let that = this
       let total = that.replyTotal
       let page = that.replyPage + 1
-      if (total > page) {
+      if (total >= page) {
         tip.loading()
         // 防止重复加载
         if (that.preventRepeatReuqest) {

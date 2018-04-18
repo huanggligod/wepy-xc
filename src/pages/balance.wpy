@@ -10,10 +10,14 @@
       <view class="account-txt">提现金额不低于1元</view>
     </view>
 		<view class="withdrawal-box">
-			<text class="tit">提现金额</text>
+      <form class="form" report-submit="true" bindsubmit="formSub">
+        <label class="tit">提现金额</label>
+        <button plain="true" class="all" formType="submit" @tap="setInputValue">全部提现</button>
+      </form>
+		
 			<view class="balance-section">
 				<text>￥</text>
-				<input type="digit" name="balance" bindinput="setValue" />
+				<input type="digit" value="{{inputValue}}" name="amount" bindinput="setValue" />
 			</view>
 			<!-- <text class="t" >全部提现</text> -->
 			<button class="cash-btn" formType="reset" @tap="formSubmit">提现</button>
@@ -39,10 +43,12 @@ export default class Balance extends wepy.page {
     navigationBarTitleText: '余额提现'
   }
   data = {
-    Balance: '0.00',
+    Balance: 0,
     token: '',
     fee: '0.00',
-    amount: ''
+    feeRate: 0.01,
+    amount: 0,
+    inputValue: ''
   }
   onLoad() {
     this.token = wepy.getStorageSync('token')
@@ -54,20 +60,32 @@ export default class Balance extends wepy.page {
   }
   methods = {
     setValue: function(e) {
-      let that = this
-      let val = parseFloat(e.detail.value)
-      console.log(val)
-      let balance = parseFloat(that.Balance)
-      if (val > 0) {
-        that.fee = (val * 0.01).toFixed(2)
+       let that = this
+      let inpData = e.detail.value
+      let money = parseFloat(inpData)
+      if (isNaN(money)) {
+        that.fee = '0.00'
+        return 0
       }
-      if (val > balance) {
-        that.fee = (that.Balance * 0.01).toFixed(2)
-        return that.Balance
-      } else {
-        that.amount = val
+      if (!/^\d*(\.\d{0,2})?$/.test(inpData)) {
+        that.fee = '0.00'
+        return money.toFixed(2)
       }
-      
+      let balance = that.Balance
+      let feeRate = that.feeRate
+      let fee = parseFloat((money * feeRate).toFixed(2))
+      if ((money + fee) > balance) {
+        fee = (balance * feeRate).toFixed(2)
+        money = balance - fee
+      }
+      that.fee = fee
+      that.amount = money.toFixed(2)
+      return money
+    },
+    setInputValue: function() {
+      this.fee = parseFloat((this.Balance * this.feeRate).toFixed(2))
+      this.inputValue = this.Balance - this.fee
+      this.amount = this.inputValue
     },
     goTo(url) {
       if (url.length === 0) {
@@ -82,7 +100,7 @@ export default class Balance extends wepy.page {
       let amount = parseFloat(that.amount)
       if (amount < 1) {
         tip.confirmT('最少提现1元')
-      } else if ((amount + that.fee) < 1.01) {
+      } else if ((amount + that.fee) > that.Balance) {
         tip.confirmT('余额不足')
       } else {
         wepy.request({
@@ -90,15 +108,16 @@ export default class Balance extends wepy.page {
           method: 'POST',
           data: {
             amount: amount,
-            fee: that.fee 
+            fee: that.fee
           },
           header: {
             'Content-Type': 'application/x-www-form-urlencoded'
           }
         }).then(res => {
-          if (res.data.code == 200) {
+          if (res.data.code === 200) {
             tip.success('提现成功')
             that.getBalance()
+            that.fee = '0.00'
           } else {
             tip.confirmT(res.data.msg)
           }
@@ -136,15 +155,15 @@ export default class Balance extends wepy.page {
       }
     }).then(res => {
       console.log(res)
-      if (res.data.code == 200) {
-        that.Balance = res.data.balance
+      if (res.data.code === 200) {
+        that.Balance = parseFloat(res.data.balance)
         that.$apply()
       }
     })
   }
-  
 }
 </script>
+
 <style lang='less'>
   page {
     background: #f6f6f6;
@@ -173,6 +192,7 @@ export default class Balance extends wepy.page {
     .tit {
       font-size: 36rpx;
       color: #5e5e5e;
+      line-height: 38rpx;
     }
     .balance-section {
       padding: 45rpx 0 20rpx 0;
@@ -244,5 +264,18 @@ export default class Balance extends wepy.page {
     font-size: 26rpx;
     text-align: center;
   }
-
+  
+  .all {
+    display: inline-block;
+    width: 150rpx;
+    border: none !important;
+    padding-left: 0;
+    padding-right: 0;
+    color: #576b95 !important;
+    font-size: 28rpx;
+    margin-left: 20rpx;
+    margin-right: 0;
+    line-height: 38rpx;
+    vertical-align: bottom;
+  }
 </style>

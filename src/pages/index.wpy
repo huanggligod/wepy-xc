@@ -100,6 +100,11 @@
       border-radius: 4rpx;
       font-size: 30rpx;
       border-radius: 4rpx;
+      display: flex;           
+      display: -moz-box;      
+      display: -ms-flexbox;     
+      align-items: center;
+      justify-content: center;
 
       &.active {
         background: #d95940;
@@ -225,7 +230,8 @@
             <label class="{{radioCheckVal==5?'active':''}}">5
               <radio value="5" hidden="true"></radio>
             </label>
-            <label style="font-size:36rpx;">···
+            <label style="font-size:36rpx;">
+              ···
               <radio value="0" hidden="true"></radio>
             </label>
           </radio-group>
@@ -317,20 +323,19 @@ export default class Index extends wepy.page {
     let that = this
     // await wepy.login()
     // let c = await wepy.getUserInfo()
-    await this.$parent.checkLoginState()
-    let userInfo = await wepy.getStorageSync('userInfo')
-    that.userInfo = userInfo
-    that.token = await wepy.getStorageSync('token')
-    // wepy.setStorageSync('userInfo',c.userInfo)
+    // await this.$parent.checkLoginState()
+    // let userInfo = await wepy.getStorageSync('userInfo')
+    // that.userInfo = userInfo
+    // console.log(userInfo)
+    // that.token = await wepy.getStorageSync('token')
+    // console.log(this.token)
     that.$apply()
   }
   async onShow () {
-    this.radioChange = ''
-    this.radioChange2 = ''
-    this.isSquare = ''
-    this.isAnony = ''
-    this.words = ''
-    checkSettingStatu()
+    await this.$parent.checkLoginState()
+    let userInfo = await wepy.getStorageSync('userInfo')
+    this.userInfo = userInfo
+    this.token = await wepy.getStorageSync('token')
     this.$apply()
   }
   methods = {
@@ -362,7 +367,7 @@ export default class Index extends wepy.page {
     },
     getConsumption: function(e) {
       let that = this
-      let val = e.detail.value.replace(/\.{2,}/g,".").replace(/^(\-)*(\d+)\.(\d\d).*$/,'$1$2.$3')
+      let val = e.detail.value.replace(/\.{2,}/g, '.').replace(/^(\-)*(\d+)\.(\d\d).*$/, '$1$2.$3')
       let isShow
       if (val < 1) {
         that.tipShow1 = true
@@ -392,7 +397,6 @@ export default class Index extends wepy.page {
     },
     async generate() {
       let that = this
-      console.log(that.money, that.num)
       let avg_money = parseFloat((that.money / that.num) * 1000 / 1000)
       let data = {
         words: that.words,
@@ -441,13 +445,6 @@ export default class Index extends wepy.page {
         })
       }
     }
-  }
-
-  async onPullDownRefresh () {
-    tip.loading()
-    await wepy.stopPullDownRefresh()
-    tip.loaded()
-    
   }
 }
 </script>
